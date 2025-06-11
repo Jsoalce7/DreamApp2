@@ -70,13 +70,11 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   }, [activeThread?.messages, activeMobileView, isMobile]);
 
   useEffect(() => {
-    // If on mobile, in chat view, but no thread selected (e.g. after a hot reload or state loss), go back to list.
-    // Also, if switching from desktop to mobile while a chat is open, ensure correct mobile view.
     if (isMobile && activeMobileView === 'chat' && !activeThreadId) {
       setActiveMobileView('list');
     }
-    if (!isMobile && activeThreadId) { // If switching to desktop with an active thread, ensure list isn't 'chat'
-        // No direct action needed for activeMobileView as it's mobile-specific, but ensures no weird state persistence
+    if (!isMobile && activeThreadId) { 
+        // No direct action needed for activeMobileView as it's mobile-specific
     }
   }, [isMobile, activeMobileView, activeThreadId]);
 
@@ -112,8 +110,6 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   const handleBackToList = () => {
     setActiveMobileView('list');
-    // Optional: Clear activeThreadId if you want the list to not have a selection when going back
-    // setActiveThreadId(null); 
   };
 
   const SidebarView = () => (
@@ -132,7 +128,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
           return (
             <Button
               key={thread.id}
-              variant={activeThreadId === thread.id && !isMobile ? "secondary" : "ghost"} // Don't show active selection in list on mobile
+              variant={activeThreadId === thread.id && !isMobile ? "secondary" : "ghost"} 
               className="w-full justify-start p-4 h-auto rounded-none border-b"
               onClick={() => handleThreadSelect(thread.id)}
             >
@@ -159,7 +155,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   );
 
   const ChatAreaView = () => {
-    if (!activeThread) { // Simplified this condition for desktop
+    if (!activeThread) { 
       return (
         <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
           <MessageSquare className="h-16 w-16 mb-4" />
@@ -168,11 +164,10 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
       );
     }
 
-    // This component will be rendered inside the fixed fullscreen div on mobile
     return (
       <div className={cn(
         "flex flex-col bg-background h-full", 
-        isMobile ? "w-full" : "w-full md:w-2/3" // On mobile, this div is inside the fullscreen container
+        isMobile ? "w-full" : "w-full md:w-2/3" 
       )}>
         <CardHeader className="p-4 border-b bg-card flex flex-row items-center shrink-0">
           {isMobile && ( 
@@ -246,7 +241,6 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
     );
   }
 
-  // Desktop layout
   return (
     <Card className="h-[70vh] flex flex-row shadow-xl">
       <SidebarView />

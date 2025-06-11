@@ -149,8 +149,6 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   const handleBackToList = () => {
     setActiveMobileView('list');
-    // Optional: Clear activeChannelId
-    // setActiveChannelId(null);
   };
 
   const ChannelListView = () => (
@@ -167,7 +165,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
         {channels.map(channel => (
           <Button
             key={channel.id}
-            variant={activeChannelId === channel.id && !isMobile ? "secondary" : "ghost"} // Don't show active selection in list on mobile
+            variant={activeChannelId === channel.id && !isMobile ? "secondary" : "ghost"} 
             className="w-full justify-start p-4 h-auto rounded-none border-b"
             onClick={() => handleChannelSelect(channel.id)}
           >
@@ -182,7 +180,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
   );
 
   const ChannelChatView = () => {
-     if (!activeChannel) { // Simplified for desktop
+     if (!activeChannel) { 
       return (
         <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
           <MessageCircle className="h-16 w-16 mb-4" />
@@ -194,7 +192,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     return (
       <div className={cn(
         "flex flex-col bg-background h-full", 
-        isMobile ? "w-full" : "w-full md:w-2/3" // On mobile, this div is inside the fullscreen container
+        isMobile ? "w-full" : "w-full md:w-2/3" 
       )}>
         <CardHeader className="p-4 border-b bg-card flex flex-row items-center shrink-0">
           {isMobile && ( 
@@ -286,7 +284,6 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     );
   }
 
-  // Desktop layout
   return (
     <Card className="h-[70vh] flex flex-row shadow-xl">
       <ChannelListView />
