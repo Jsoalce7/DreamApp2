@@ -1,7 +1,9 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BattleList } from "./components/BattleList";
 import { RequestBattleForm } from "./components/RequestBattleForm";
-import { ShieldCheck, PlusCircle } from "lucide-react";
+import { CommunityBattleList } from "./components/CommunityBattleList"; // New import
+import { ShieldCheck, PlusCircle, Users2 } from "lucide-react"; // Added Users2
 
 export default function BattlesPage() {
   return (
@@ -14,7 +16,7 @@ export default function BattlesPage() {
       </header>
 
       <Tabs defaultValue="upcoming-battles" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex mb-6">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:w-auto md:inline-flex mb-6">
           <TabsTrigger value="upcoming-battles" className="text-sm md:text-base">
             <ShieldCheck className="mr-2 h-5 w-5" />
             Upcoming Battles
@@ -23,12 +25,19 @@ export default function BattlesPage() {
             <PlusCircle className="mr-2 h-5 w-5" />
             Request a Battle
           </TabsTrigger>
+          <TabsTrigger value="community-battles" className="text-sm md:text-base">
+            <Users2 className="mr-2 h-5 w-5" />
+            Community Battles
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming-battles">
           <BattleList />
         </TabsContent>
         <TabsContent value="request-battle">
           <RequestBattleForm />
+        </TabsContent>
+        <TabsContent value="community-battles">
+          <CommunityBattleList />
         </TabsContent>
       </Tabs>
     </div>
