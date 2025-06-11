@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect here
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -60,7 +60,7 @@ export function RequestBattleForm() {
   // Watch the battleType field to react to its changes
   const battleType = watch("battleType");
 
-  React.useEffect(() => {
+  useEffect(() => { // Changed from React.useEffect to useEffect
     setSelectedBattleType(battleType);
     if (battleType === "open") {
       setValue("opponentName", undefined); // Clear opponent name if switching to open
@@ -211,3 +211,4 @@ export function RequestBattleForm() {
     </Card>
   );
 }
+
