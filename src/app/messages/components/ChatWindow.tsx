@@ -61,15 +61,15 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   useEffect(() => {
      if (isMobile) {
-      if (!activeThreadId) { // If mobile and no thread selected, stay/go to list
+      if (!activeThreadId) { 
         setActiveMobileView('list');
         onMobileViewChange?.('list');
-      } else { // If mobile and a thread is selected, go to chat
+      } else { 
         setActiveMobileView('chat');
         onMobileViewChange?.('chat');
       }
-    } else { // Desktop
-      onMobileViewChange?.(activeThreadId ? 'chat' : 'list'); // Inform parent, but view is handled by layout
+    } else { 
+      onMobileViewChange?.(activeThreadId ? 'chat' : 'list'); 
     }
   }, [isMobile, activeThreadId, onMobileViewChange]);
 
@@ -116,12 +116,12 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
       setActiveMobileView('chat'); 
       onMobileViewChange?.('chat');
     } else {
-      onMobileViewChange?.('chat'); // For desktop, just inform parent
+      onMobileViewChange?.('chat'); 
     }
   };
 
   const handleBackToList = () => {
-    setActiveThreadId(null); // Deselect thread
+    setActiveThreadId(null); 
     setActiveMobileView('list');
     onMobileViewChange?.('list'); 
   };
@@ -220,33 +220,35 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
           </CardTitle>
         </CardHeader>
         
-        <ScrollArea className="flex-grow h-0 p-4 space-y-4">
-          {activeThread!.messages.map(msg => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
-            >
-              <div className={`flex items-end gap-2 max-w-[70%] ${msg.sender.id === mockCurrentUser.id ? "flex-row-reverse" : "flex-row"}`}>
-                <Avatar className="h-8 w-8">
-                    <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
-                    <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
-                </Avatar>
-                <div
-                    className={`p-3 rounded-lg shadow ${
-                    msg.sender.id === mockCurrentUser.id
-                        ? "bg-primary text-primary-foreground rounded-br-none"
-                        : "bg-card text-card-foreground rounded-bl-none border"
-                    }`}
-                >
-                    <p className="text-sm">{msg.text}</p>
-                    <p className={`text-xs mt-1 ${msg.sender.id === mockCurrentUser.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                    {format(parseISO(msg.timestamp), "p")}
-                    </p>
+        <ScrollArea className="flex-grow h-0">
+          <div className="p-4 space-y-4">
+            {activeThread!.messages.map(msg => (
+              <div
+                key={msg.id}
+                className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`flex items-end gap-2 max-w-[70%] ${msg.sender.id === mockCurrentUser.id ? "flex-row-reverse" : "flex-row"}`}>
+                  <Avatar className="h-8 w-8">
+                      <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
+                      <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
+                  </Avatar>
+                  <div
+                      className={`p-3 rounded-lg shadow ${
+                      msg.sender.id === mockCurrentUser.id
+                          ? "bg-primary text-primary-foreground rounded-br-none"
+                          : "bg-card text-card-foreground rounded-bl-none border"
+                      }`}
+                  >
+                      <p className="text-sm">{msg.text}</p>
+                      <p className={`text-xs mt-1 ${msg.sender.id === mockCurrentUser.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                      {format(parseISO(msg.timestamp), "p")}
+                      </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
         </ScrollArea>
         <CardFooter className="p-4 border-t bg-card shrink-0">
           <div className="flex w-full space-x-2">

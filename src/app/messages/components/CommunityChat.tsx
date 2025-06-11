@@ -56,15 +56,15 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
  useEffect(() => {
     if (isMobile) {
-      if (!activeChannelId) { // If mobile and no channel selected, stay/go to list
+      if (!activeChannelId) { 
         setActiveMobileView('list');
         onMobileViewChange?.('list');
-      } else { // If mobile and a channel is selected, go to chat
+      } else { 
         setActiveMobileView('chat');
         onMobileViewChange?.('chat');
       }
-    } else { // Desktop
-      onMobileViewChange?.(activeChannelId ? 'chat' : 'list'); // Inform parent
+    } else { 
+      onMobileViewChange?.(activeChannelId ? 'chat' : 'list'); 
     }
   }, [isMobile, activeChannelId, onMobileViewChange]);
 
@@ -160,7 +160,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
   };
 
   const handleBackToList = () => {
-    setActiveChannelId(null); // Deselect channel
+    setActiveChannelId(null); 
     setActiveMobileView('list');
     onMobileViewChange?.('list'); 
   };
@@ -238,45 +238,47 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
             {activeChannel!.description && <p className="text-sm text-muted-foreground truncate">{activeChannel!.description}</p>}
           </div>
         </CardHeader>
-        <ScrollArea className="flex-grow h-0 p-4 space-y-4">
-          {activeChannel!.messages.map(msg => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
-            >
-              <div className={`flex items-start gap-2 max-w-[80%] ${msg.sender.id === mockCurrentUser.id ? "flex-row-reverse" : "flex-row"}`}>
-                  <Avatar className="h-8 w-8 shrink-0 mt-1">
-                    <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
-                    <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
-                </Avatar>
-                <div
-                    className={`p-3 rounded-lg shadow ${
-                    msg.sender.id === mockCurrentUser.id
-                        ? "bg-primary text-primary-foreground rounded-br-none"
-                        : "bg-card text-card-foreground rounded-bl-none border"
-                    }`}
-                >
-                    <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-semibold">{msg.sender.name}</span>
-                          {msg.isFlagged !== undefined && (
-                            <Badge variant={msg.isFlagged ? "destructive" : "default"} className="ml-2 text-xs px-1.5 py-0.5">
-                            {msg.isFlagged ? <ShieldAlert className="h-3 w-3 mr-1" /> : <ShieldCheck className="h-3 w-3 mr-1" />}
-                            {msg.isFlagged ? 'Flagged' : 'Safe'}
-                            </Badge>
-                        )}
-                    </div>
-                    <p className="text-sm">{msg.text}</p>
-                    {msg.isFlagged && msg.flagReason && (
-                        <p className="text-xs mt-1 opacity-80">Reason: {msg.flagReason}</p>
-                    )}
-                    <p className={`text-xs mt-1 text-right ${msg.sender.id === mockCurrentUser.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                        {format(parseISO(msg.timestamp), "p")}
-                    </p>
+        <ScrollArea className="flex-grow h-0">
+          <div className="p-4 space-y-4">
+            {activeChannel!.messages.map(msg => (
+              <div
+                key={msg.id}
+                className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`flex items-start gap-2 max-w-[80%] ${msg.sender.id === mockCurrentUser.id ? "flex-row-reverse" : "flex-row"}`}>
+                    <Avatar className="h-8 w-8 shrink-0 mt-1">
+                      <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
+                      <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
+                  </Avatar>
+                  <div
+                      className={`p-3 rounded-lg shadow ${
+                      msg.sender.id === mockCurrentUser.id
+                          ? "bg-primary text-primary-foreground rounded-br-none"
+                          : "bg-card text-card-foreground rounded-bl-none border"
+                      }`}
+                  >
+                      <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold">{msg.sender.name}</span>
+                            {msg.isFlagged !== undefined && (
+                              <Badge variant={msg.isFlagged ? "destructive" : "default"} className="ml-2 text-xs px-1.5 py-0.5">
+                              {msg.isFlagged ? <ShieldAlert className="h-3 w-3 mr-1" /> : <ShieldCheck className="h-3 w-3 mr-1" />}
+                              {msg.isFlagged ? 'Flagged' : 'Safe'}
+                              </Badge>
+                          )}
+                      </div>
+                      <p className="text-sm">{msg.text}</p>
+                      {msg.isFlagged && msg.flagReason && (
+                          <p className="text-xs mt-1 opacity-80">Reason: {msg.flagReason}</p>
+                      )}
+                      <p className={`text-xs mt-1 text-right ${msg.sender.id === mockCurrentUser.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                          {format(parseISO(msg.timestamp), "p")}
+                      </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
         </ScrollArea>
         <CardFooter className="p-4 border-t bg-card shrink-0">
           <div className="flex w-full space-x-2">
