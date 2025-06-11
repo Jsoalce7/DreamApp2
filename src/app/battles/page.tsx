@@ -23,7 +23,7 @@ export default function BattlesPage() {
   const [activeTab, setActiveTab] = useState<TabValue>("upcoming-battles");
 
   return (
-    <div className="space-y-8 pb-20 lg:pb-0"> {/* Added padding-bottom for bottom nav space on mobile */}
+    <div className="space-y-8 pb-20 lg:pb-0 py-8"> {/* Added padding-bottom for bottom nav space on mobile and py-8 */}
       <header className="mb-8">
         <h1 className="text-4xl font-headline font-bold text-primary">Battle Arena</h1>
         <p className="text-lg text-muted-foreground">

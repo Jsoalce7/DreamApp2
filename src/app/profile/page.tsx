@@ -22,7 +22,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="space-y-8 max-w-3xl mx-auto py-8">
       <header className="mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary">Your Profile</h1>
         <p className="text-base sm:text-lg text-muted-foreground">

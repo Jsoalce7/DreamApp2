@@ -23,7 +23,7 @@ export default function LeaderboardPage() {
   const sortedUsers = [...mockLeaderboardUsers].sort((a, b) => (b.diamonds || 0) - (a.diamonds || 0));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 py-8">
       <header className="mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary flex items-center justify-center">
           <Trophy className="mr-3 h-8 w-8 sm:h-10 sm:w-10 text-yellow-500" />

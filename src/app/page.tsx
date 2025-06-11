@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 py-8">
       <section className="text-center py-8 sm:py-12 bg-gradient-to-r from-primary to-accent rounded-lg shadow-xl">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline font-bold text-primary-foreground mb-4 px-2">
           Welcome to ClashSync Lite!
