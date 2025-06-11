@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, ShieldAlert, ShieldCheck, Users } from "lucide-react";
+import { Send, ShieldAlert, ShieldCheck, Users, ArrowLeft, MessageCircle } from "lucide-react"; // Added ArrowLeft, MessageCircle
 import { moderateCommunityChatMessage, type ModerateCommunityChatMessageOutput } from "@/ai/flows/community-moderator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from "@/lib/utils";
 
 const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 };
 const mockOtherUser: User = { id: "otherUser", name: "ModeratorBot", avatarUrl: "https://placehold.co/40x40.png?text=MB", diamonds: 0 };
@@ -36,17 +38,27 @@ const initialChannels: CommunityChannel[] = [
 
 export function CommunityChat() {
   const [channels, setChannels] = useState<CommunityChannel[]>(initialChannels);
-  const [activeChannelId, setActiveChannelId] = useState<string>("general");
+  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [isModerating, setIsModerating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
+  const [activeMobileView, setActiveMobileView] = useState<'list' | 'chat'>('list');
 
   const activeChannel = channels.find(c => c.id === activeChannelId);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeChannel?.messages]);
+    if (activeMobileView === 'chat' || !isMobile) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [activeChannel?.messages, activeMobileView, isMobile]);
+  
+  useEffect(() => {
+    if (isMobile && activeMobileView === 'chat' && !activeChannelId) {
+      setActiveMobileView('list');
+    }
+  }, [isMobile, activeMobileView, activeChannelId]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeChannel) return;
@@ -60,7 +72,6 @@ export function CommunityChat() {
       timestamp: new Date().toISOString(),
     };
 
-    // Optimistic update
     setChannels(prevChannels =>
       prevChannels.map(channel =>
         channel.id === activeChannelId
@@ -76,7 +87,7 @@ export function CommunityChat() {
       
       const finalMessage: Message = {
         ...optimisticMessage,
-        id: `msg-${Date.now()}`, // Replace temp ID with final ID
+        id: `msg-${Date.now()}`, 
         isFlagged: moderationResult.isFlagged,
         flagReason: moderationResult.reason,
       };
@@ -104,11 +115,10 @@ export function CommunityChat() {
         description: "Could not send or moderate message.",
         variant: "destructive",
       });
-      // Revert optimistic update or mark message as failed
        setChannels(prevChannels =>
         prevChannels.map(channel =>
           channel.id === activeChannelId
-            ? { ...channel, messages: channel.messages.filter(m => m.id !== tempMessageId) } // Remove optimistic message
+            ? { ...channel, messages: channel.messages.filter(m => m.id !== tempMessageId) } 
             : channel
         )
       );
@@ -117,111 +127,156 @@ export function CommunityChat() {
     }
   };
 
-  return (
-    <Card className="h-[70vh] flex flex-col md:flex-row shadow-xl">
-       {/* Sidebar with channels */}
-      <div className="w-full md:w-1/3 border-r flex flex-col bg-card">
-        <CardHeader className="p-4 border-b">
-          <CardTitle className="text-lg flex items-center">
-            <Users className="mr-2 h-5 w-5 text-primary" /> Community Channels
-          </CardTitle>
-        </CardHeader>
-        <ScrollArea className="flex-grow">
-          {channels.map(channel => (
-            <Button
-              key={channel.id}
-              variant={activeChannelId === channel.id ? "secondary" : "ghost"}
-              className="w-full justify-start p-4 h-auto rounded-none border-b"
-              onClick={() => setActiveChannelId(channel.id)}
-            >
-              <div className="flex-grow text-left">
-                <p className="font-semibold">{channel.name}</p>
-                {channel.description && <p className="text-xs text-muted-foreground truncate max-w-[200px]">{channel.description}</p>}
-              </div>
+  const handleChannelSelect = (channelId: string) => {
+    setActiveChannelId(channelId);
+    if (isMobile) {
+      setActiveMobileView('chat');
+    }
+  };
+
+  const handleBackToList = () => {
+    setActiveMobileView('list');
+  };
+
+  const ChannelListView = () => (
+    <div className={cn(
+      "flex flex-col bg-card",
+      isMobile ? "w-full h-full" : "w-full md:w-1/3 border-r"
+    )}>
+      <CardHeader className="p-4 border-b">
+        <CardTitle className="text-lg flex items-center">
+          <Users className="mr-2 h-5 w-5 text-primary" /> Community Channels
+        </CardTitle>
+      </CardHeader>
+      <ScrollArea className="flex-grow">
+        {channels.map(channel => (
+          <Button
+            key={channel.id}
+            variant={activeChannelId === channel.id ? "secondary" : "ghost"}
+            className="w-full justify-start p-4 h-auto rounded-none border-b"
+            onClick={() => handleChannelSelect(channel.id)}
+          >
+            <div className="flex-grow text-left">
+              <p className="font-semibold">{channel.name}</p>
+              {channel.description && <p className="text-xs text-muted-foreground truncate max-w-[200px]">{channel.description}</p>}
+            </div>
+          </Button>
+        ))}
+      </ScrollArea>
+    </div>
+  );
+
+  const ChannelChatView = () => {
+    if (!activeChannel) {
+      return (
+        <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
+          <MessageCircle className="h-16 w-16 mb-4" />
+          <p className="text-xl">{isMobile ? "Select a channel" : "Select a channel to start chatting"}</p>
+           {isMobile && (
+            <Button onClick={handleBackToList} variant="outline" className="mt-4">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
             </Button>
-          ))}
-        </ScrollArea>
-      </div>
-
-      {/* Main chat area */}
-      <div className="w-full md:w-2/3 flex flex-col bg-background">
-        {activeChannel ? (
-          <>
-            <CardHeader className="p-4 border-b bg-card">
-              <CardTitle className="flex items-center">
-                {activeChannel.name}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">{activeChannel.description}</p>
-            </CardHeader>
-            <ScrollArea className="flex-grow p-4 space-y-4">
-              {activeChannel.messages.map(msg => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
-                >
-                  <div className={`flex items-start gap-2 max-w-[80%] ${msg.sender.id === mockCurrentUser.id ? "flex-row-reverse" : "flex-row"}`}>
-                     <Avatar className="h-8 w-8 shrink-0 mt-1">
-                        <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
-                        <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
-                    </Avatar>
-                    <div
-                        className={`p-3 rounded-lg shadow ${
-                        msg.sender.id === mockCurrentUser.id
-                            ? "bg-primary text-primary-foreground rounded-br-none"
-                            : "bg-card text-card-foreground rounded-bl-none border"
-                        }`}
-                    >
-                        <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold">{msg.sender.name}</span>
-                             {msg.isFlagged !== undefined && (
-                                <Badge variant={msg.isFlagged ? "destructive" : "default"} className="ml-2 text-xs px-1.5 py-0.5">
-                                {msg.isFlagged ? <ShieldAlert className="h-3 w-3 mr-1" /> : <ShieldCheck className="h-3 w-3 mr-1" />}
-                                {msg.isFlagged ? 'Flagged' : 'Safe'}
-                                </Badge>
-                            )}
-                        </div>
-                        <p className="text-sm">{msg.text}</p>
-                        {msg.isFlagged && msg.flagReason && (
-                            <p className="text-xs mt-1 opacity-80">Reason: {msg.flagReason}</p>
-                        )}
-                        <p className={`text-xs mt-1 text-right ${msg.sender.id === mockCurrentUser.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                            {format(parseISO(msg.timestamp), "p")}
-                        </p>
-                    </div>
-                  </div>
-
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </ScrollArea>
-            <CardFooter className="p-4 border-t bg-card">
-              <div className="flex w-full space-x-2">
-                <Textarea
-                  placeholder={`Message ${activeChannel.name}...`}
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  className="flex-grow resize-none min-h-[40px]"
-                  rows={1}
-                />
-                <Button onClick={handleSendMessage} disabled={!newMessage.trim() || isModerating} className="bg-accent hover:bg-accent/90 self-end">
-                  {isModerating ? "Sending..." : <Send className="h-5 w-5" />}
-                  <span className="sr-only">Send</span>
-                </Button>
-              </div>
-            </CardFooter>
-          </>
-        ) : (
-          <div className="flex-grow flex items-center justify-center text-muted-foreground">
-            <p>Select a channel to start chatting.</p>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className={cn(
+        "flex flex-col bg-background",
+        isMobile ? "w-full h-full" : "w-full md:w-2/3"
+      )}>
+        <CardHeader className="p-4 border-b bg-card flex flex-row items-center">
+          {isMobile && (
+            <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
+          <div className="flex-grow truncate">
+            <CardTitle className="text-lg truncate"> 
+              {activeChannel.name}
+            </CardTitle>
+            {activeChannel.description && <p className="text-sm text-muted-foreground truncate">{activeChannel.description}</p>}
           </div>
-        )}
+        </CardHeader>
+        <ScrollArea className="flex-grow p-4 space-y-4">
+          {activeChannel.messages.map(msg => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
+            >
+              <div className={`flex items-start gap-2 max-w-[80%] ${msg.sender.id === mockCurrentUser.id ? "flex-row-reverse" : "flex-row"}`}>
+                  <Avatar className="h-8 w-8 shrink-0 mt-1">
+                    <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
+                    <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
+                </Avatar>
+                <div
+                    className={`p-3 rounded-lg shadow ${
+                    msg.sender.id === mockCurrentUser.id
+                        ? "bg-primary text-primary-foreground rounded-br-none"
+                        : "bg-card text-card-foreground rounded-bl-none border"
+                    }`}
+                >
+                    <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold">{msg.sender.name}</span>
+                          {msg.isFlagged !== undefined && (
+                            <Badge variant={msg.isFlagged ? "destructive" : "default"} className="ml-2 text-xs px-1.5 py-0.5">
+                            {msg.isFlagged ? <ShieldAlert className="h-3 w-3 mr-1" /> : <ShieldCheck className="h-3 w-3 mr-1" />}
+                            {msg.isFlagged ? 'Flagged' : 'Safe'}
+                            </Badge>
+                        )}
+                    </div>
+                    <p className="text-sm">{msg.text}</p>
+                    {msg.isFlagged && msg.flagReason && (
+                        <p className="text-xs mt-1 opacity-80">Reason: {msg.flagReason}</p>
+                    )}
+                    <p className={`text-xs mt-1 text-right ${msg.sender.id === mockCurrentUser.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                        {format(parseISO(msg.timestamp), "p")}
+                    </p>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </ScrollArea>
+        <CardFooter className="p-4 border-t bg-card">
+          <div className="flex w-full space-x-2">
+            <Textarea
+              placeholder={`Message ${activeChannel.name}...`}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              className="flex-grow resize-none min-h-[40px]"
+              rows={1}
+            />
+            <Button onClick={handleSendMessage} disabled={!newMessage.trim() || isModerating} className="bg-accent hover:bg-accent/90 self-end">
+              {isModerating ? "Sending..." : <Send className="h-5 w-5" />}
+              <span className="sr-only">Send</span>
+            </Button>
+          </div>
+        </CardFooter>
       </div>
+    );
+  };
+
+
+  if (isMobile) {
+    return (
+      <div className="w-full h-full flex flex-col"> {/* Occupy space given by parent TabContent */}
+        {activeMobileView === 'list' ? <ChannelListView /> : <ChannelChatView />}
+      </div>
+    );
+  }
+
+  // Desktop layout
+  return (
+    <Card className="h-[70vh] flex flex-row shadow-xl">
+      <ChannelListView />
+      <ChannelChatView />
     </Card>
   );
 }
