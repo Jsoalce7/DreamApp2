@@ -20,11 +20,8 @@ export default function MessagesPage() {
 
   return (
     <div className="flex flex-col h-full"> {/* Changed to flex flex-col h-full */}
-      <header className="mb-8 shrink-0"> {/* Added shrink-0 */}
-        <h1 className="text-4xl font-headline font-bold text-primary">Messages & Community</h1>
-        <p className="text-lg text-muted-foreground">
-          Connect with others via direct messages or join community channels.
-        </p>
+      <header className="mb-4 shrink-0"> {/* Adjusted margin bottom as content is removed */}
+        {/* h1 and p tags removed as per request */}
       </header>
 
       {/* Desktop Tabs */}
@@ -62,3 +59,4 @@ export default function MessagesPage() {
     </div>
   );
 }
+
