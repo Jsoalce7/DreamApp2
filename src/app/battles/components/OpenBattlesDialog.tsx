@@ -181,9 +181,9 @@ export function OpenBattlesDialog() {
             </Select>
           </div>
 
-          <ScrollArea className="flex-grow pr-6 -mr-6">
+          <ScrollArea className="flex-grow">
             {filteredOpenBattles.length > 0 ? (
-              <div className="space-y-4 py-4">
+              <div className="space-y-4 py-4 pr-3"> {/* Added pr-3 to prevent content from going under a potential scrollbar */}
                 {filteredOpenBattles.map((battle) => (
                   <Card key={battle.id} className="shadow-md hover:shadow-lg transition-shadow">
                     <CardHeader>
@@ -235,7 +235,7 @@ export function OpenBattlesDialog() {
               </div>
             )}
           </ScrollArea>
-          <DialogFooter className="mt-4 sm:justify-end">
+          <DialogFooter className="mt-4 sm:justify-end pt-4 border-t"> {/* Added pt-4 and border-t for separation */}
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 Close
@@ -272,3 +272,4 @@ export function OpenBattlesDialog() {
     </>
   );
 }
+
