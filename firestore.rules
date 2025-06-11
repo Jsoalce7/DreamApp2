@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is owner of a document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Users: Publicly readable basic info, owner can write
+    match /users/{userId} {
+      allow read: if true; // Allow reading basic profile info
+      allow write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Battles: Authenticated users can read, involved parties or admins can write/update
+    match /battles/{battleId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated(); // Further rules needed for who can create (e.g. involved in battle request)
+      allow update, delete: if isAuthenticated() && (
+                            resource.data.opponentAId == request.auth.uid ||
+                            resource.data.opponentBId == request.auth.uid ||
+                            resource.data.requestedToUserId == request.auth.uid ||
+                            resource.data.requestedByUserId == request.auth.uid
+                            // || isAdmin() // (requires admin role check)
+                          );
+    }
+
+    // Direct Message Threads: Only participants can read/write
+    match /dmThreads/{threadId} {
+      allow read, write: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      // Messages subcollection within a thread
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/dmThreads/$(threadId)).data.participants;
+      }
+    }
+
+    // Community Channels: Authenticated users can read, admins can create/manage
+    match /communityChannels/{channelId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated(); // && isAdmin(); // (requires admin role check for channel creation)
+      allow update, delete: if isAuthenticated(); // && isAdmin(); // (requires admin role check for management)
+
+      // Messages subcollection within a channel
+      match /messages/{messageId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+        // Update/delete typically restricted or handled by moderators/admins
+        allow update, delete: if isAuthenticated() && (isOwner(request.resource.data.senderId)); // || isAdmin() || isModerator(channelId)
+      }
+    }
+
+    // Battle Requests: Involved parties can read/write
+    // This might be part of the /battles collection with specific status, or a separate collection.
+    // Assuming battle requests are handled by updating battle documents with status 'Requested' or 'Pending'.
+
+  }
+}
