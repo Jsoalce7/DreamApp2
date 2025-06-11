@@ -54,9 +54,20 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   const activeChannel = channels.find(c => c.id === activeChannelId);
 
-  useEffect(() => {
-    onMobileViewChange?.(activeMobileView);
-  }, [activeMobileView, onMobileViewChange]);
+ useEffect(() => {
+    // Initialize view based on mobile status
+    if (isMobile) {
+      setActiveMobileView('list');
+      onMobileViewChange?.('list');
+    } else if (activeChannelId) { // if not mobile and a channel is active, ensure chat view
+      setActiveMobileView('chat');
+      onMobileViewChange?.('chat');
+    } else { // if not mobile and no channel active, default to list
+      setActiveMobileView('list');
+      onMobileViewChange?.('list');
+    }
+  }, [isMobile]);
+
 
   useEffect(() => {
     if (activeMobileView === 'chat' || !isMobile) {
@@ -68,9 +79,6 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     if (isMobile && activeMobileView === 'chat' && !activeChannelId) {
       setActiveMobileView('list');
       onMobileViewChange?.('list');
-    }
-     if (!isMobile && activeChannelId) {
-        // No direct action needed for activeMobileView as it's mobile-specific
     }
   }, [isMobile, activeMobileView, activeChannelId, onMobileViewChange]);
 
@@ -143,10 +151,8 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   const handleChannelSelect = (channelId: string) => {
     setActiveChannelId(channelId);
-    if (isMobile) {
-      setActiveMobileView('chat');
-      onMobileViewChange?.('chat');
-    }
+    setActiveMobileView('chat'); 
+    onMobileViewChange?.('chat');
   };
 
   const handleBackToList = () => {
@@ -188,7 +194,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
             return (
               <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
                 <MessageCircle className="h-16 w-16 mb-4" />
-                <p className="text-xl">Channel not found. Go back to list.</p>
+                <p className="text-xl">Channel not found or selected.</p>
                 <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
               </div>
             );
@@ -218,7 +224,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
         
         <CardHeader className={cn(
             "p-4 border-b bg-card flex-row items-center shrink-0",
-             isMobile && activeMobileView === 'chat' ? "hidden" : "flex" 
+             (isMobile && activeMobileView === 'chat') ? "hidden" : "flex" 
         )}>
           <div className="flex-grow truncate">
             <CardTitle className="text-lg truncate"> 
@@ -295,11 +301,11 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   if (isMobile) {
     return (
-       <div className="w-full h-full flex flex-col">
+       <div className="w-full h-full flex flex-col"> {/* This div must be h-full */}
         {activeMobileView === 'list' && <ChannelListView />}
         {activeMobileView === 'chat' && activeChannelId && <ChannelChatView />}
          {activeMobileView === 'chat' && !activeChannelId && ( 
-           <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
+           <div className="flex-grow flex flex-col h-full items-center justify-center text-muted-foreground p-4"> {/* Ensure placeholder also fills */}
             <MessageCircle className="h-16 w-16 mb-4" />
             <p className="text-xl">No channel selected.</p>
             <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
@@ -309,6 +315,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     );
   }
 
+  // Desktop View
   return (
     <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl">
       <ChannelListView />
@@ -316,3 +323,5 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     </Card>
   );
 }
+
+    

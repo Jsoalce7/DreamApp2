@@ -60,8 +60,19 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const activeThread = threads.find(t => t.id === activeThreadId);
 
   useEffect(() => {
-    onMobileViewChange?.(activeMobileView);
-  }, [activeMobileView, onMobileViewChange]);
+    // Initialize view based on mobile status
+     if (isMobile) {
+      setActiveMobileView('list');
+      onMobileViewChange?.('list');
+    } else if (activeThreadId) { // if not mobile and a thread is active, ensure chat view
+      setActiveMobileView('chat'); 
+      onMobileViewChange?.('chat');
+    } else { // if not mobile and no thread active, can be list or imply select
+      setActiveMobileView('list'); // Default to list if no active thread on desktop
+      onMobileViewChange?.('list');
+    }
+  }, [isMobile]);
+
 
   useEffect(() => {
     if (activeMobileView === 'chat' || !isMobile) {
@@ -71,12 +82,11 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   useEffect(() => {
     if (isMobile && activeMobileView === 'chat' && !activeThreadId) {
+      // If mobile, in chat view, but no thread selected (e.g. after deleting a thread), go back to list.
       setActiveMobileView('list');
       onMobileViewChange?.('list');
     }
-    if (!isMobile && activeThreadId) { 
-        // No direct action needed for activeMobileView as it's mobile-specific
-    }
+    // If switching from mobile to desktop, or vice-versa, onMobileViewChange should be called by the primary useEffect.
   }, [isMobile, activeMobileView, activeThreadId, onMobileViewChange]);
 
   const handleSendMessage = () => {
@@ -104,10 +114,10 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   const handleThreadSelect = (threadId: string) => {
     setActiveThreadId(threadId);
-    if (isMobile) {
-      setActiveMobileView('chat');
-      onMobileViewChange?.('chat');
-    }
+    // Always switch to chat view when a thread is selected, regardless of mobile status initially.
+    // The parent component (MessagesPage) and the useEffect hooks here will manage fullscreen/bottom nav visibility.
+    setActiveMobileView('chat'); 
+    onMobileViewChange?.('chat');
   };
 
   const handleBackToList = () => {
@@ -161,15 +171,16 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
     const otherParticipant = activeThread ? getOtherParticipant(activeThread) : null;
 
     if (!activeThread || !otherParticipant) { 
-      if (isMobile && activeMobileView === 'chat') {
+      if (isMobile && activeMobileView === 'chat') { // Only show this specific message if trying to view chat on mobile without selection
         return (
           <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
             <MessageSquare className="h-16 w-16 mb-4" />
-            <p className="text-xl">Chat not found. Go back to list.</p>
+            <p className="text-xl">Chat not found or selected.</p>
             <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
           </div>
         );
       }
+      // For desktop, or mobile in list view when no chat is active (which shouldn't happen if list view is active)
       return (
         <div className="flex-grow hidden md:flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
           <MessageSquare className="h-16 w-16 mb-4" />
@@ -198,7 +209,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
         <CardHeader className={cn(
             "p-4 border-b bg-card flex-row items-center shrink-0",
-            isMobile && activeMobileView === 'chat' ? "hidden" : "flex" 
+            (isMobile && activeMobileView === 'chat') ? "hidden" : "flex" 
         )}>
           <Avatar className="h-8 w-8 mr-2 shrink-0">
             <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
@@ -258,11 +269,11 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   if (isMobile) {
     return (
-      <div className="w-full h-full flex flex-col">
+      <div className="w-full h-full flex flex-col"> {/* This div must be h-full for ChatAreaView to fill */}
         {activeMobileView === 'list' && <SidebarView />}
         {activeMobileView === 'chat' && activeThreadId && <ChatAreaView />}
         {activeMobileView === 'chat' && !activeThreadId && ( 
-           <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
+           <div className="flex-grow flex flex-col h-full items-center justify-center text-muted-foreground p-4"> {/* Ensure this placeholder also fills height or grows */}
             <MessageSquare className="h-16 w-16 mb-4" />
             <p className="text-xl">No chat selected.</p>
             <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
@@ -272,6 +283,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
     );
   }
 
+  // Desktop view
   return (
     <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl">
       <SidebarView />
@@ -279,3 +291,5 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
     </Card>
   );
 }
+
+    
