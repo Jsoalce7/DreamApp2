@@ -2,8 +2,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BattleList } from "./components/BattleList";
 import { RequestBattleForm } from "./components/RequestBattleForm";
-import { CommunityBattleList } from "./components/CommunityBattleList"; // New import
-import { ShieldCheck, PlusCircle, Users2 } from "lucide-react"; // Added Users2
+import { CommunityBattleList } from "./components/CommunityBattleList";
+import { BattleRequestInbox } from "./components/BattleRequestInbox"; // New import
+import { ShieldCheck, PlusCircle, Users2, Inbox } from "lucide-react"; // Added Inbox
 
 export default function BattlesPage() {
   return (
@@ -16,10 +17,14 @@ export default function BattlesPage() {
       </header>
 
       <Tabs defaultValue="upcoming-battles" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:w-auto md:inline-flex mb-6">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-6">
           <TabsTrigger value="upcoming-battles" className="text-sm md:text-base">
             <ShieldCheck className="mr-2 h-5 w-5" />
             Upcoming Battles
+          </TabsTrigger>
+          <TabsTrigger value="request-inbox" className="text-sm md:text-base">
+            <Inbox className="mr-2 h-5 w-5" />
+            Request Inbox
           </TabsTrigger>
           <TabsTrigger value="request-battle" className="text-sm md:text-base">
             <PlusCircle className="mr-2 h-5 w-5" />
@@ -33,6 +38,9 @@ export default function BattlesPage() {
         <TabsContent value="upcoming-battles">
           <BattleList />
         </TabsContent>
+        <TabsContent value="request-inbox">
+          <BattleRequestInbox />
+        </TabsContent>
         <TabsContent value="request-battle">
           <RequestBattleForm />
         </TabsContent>
@@ -43,3 +51,4 @@ export default function BattlesPage() {
     </div>
   );
 }
+
