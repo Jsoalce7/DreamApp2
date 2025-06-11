@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/Logo';
@@ -8,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 const navItems = [
   { href: '/battles', label: 'Battles' },
   { href: '/messages', label: 'Messages' },
+  { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/profile', label: 'Profile' },
 ];
 

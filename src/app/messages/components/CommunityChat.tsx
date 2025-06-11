@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -13,8 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from 'date-fns';
 
-const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME" };
-const mockOtherUser: User = { id: "otherUser", name: "ModeratorBot", avatarUrl: "https://placehold.co/40x40.png?text=MB" };
+const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 };
+const mockOtherUser: User = { id: "otherUser", name: "ModeratorBot", avatarUrl: "https://placehold.co/40x40.png?text=MB", diamonds: 0 };
 
 const initialChannels: CommunityChannel[] = [
   {

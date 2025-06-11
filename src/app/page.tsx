@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, MessageSquare, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, MessageSquare, ShieldCheck, Users, Trophy } from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -20,14 +21,14 @@ export default function HomePage() {
             </Link>
           </Button>
           <Button size="lg" variant="outline" asChild className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 transition-transform hover:scale-105">
-            <Link href="/messages">
-              Open Chat <MessageSquare className="ml-2 h-5 w-5" />
+            <Link href="/leaderboard">
+              View Leaderboard <Trophy className="ml-2 h-5 w-5" />
             </Link>
           </Button>
         </div>
       </section>
 
-      <section className="grid md:grid-cols-3 gap-8">
+      <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
         <Card className="hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
             <CardTitle className="flex items-center text-2xl font-headline">
@@ -89,6 +90,28 @@ export default function HomePage() {
             <Button variant="link" asChild className="text-primary p-0">
               <Link href="/messages#community">
                 Join Channels <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader>
+            <CardTitle className="flex items-center text-2xl font-headline">
+              <Trophy className="mr-3 h-8 w-8 text-yellow-500" />
+              Leaderboard
+            </CardTitle>
+            <CardDescription>
+              Climb the ranks and show off your diamond collection.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              Compete with other creators and see who's at the top of their game.
+            </p>
+            <Button variant="link" asChild className="text-yellow-500 p-0">
+              <Link href="/leaderboard">
+                View Leaderboard <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
           </CardContent>

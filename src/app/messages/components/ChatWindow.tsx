@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -10,12 +11,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Send, MessageSquare, Search } from "lucide-react";
 import { format, parseISO } from 'date-fns';
 
-const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME" };
+const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 };
 
 const mockUsers: User[] = [
-  { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX" },
-  { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP" },
-  { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC" },
+  { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120 },
+  { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP", diamonds: 250 },
+  { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50 },
 ];
 
 const mockThreads: DirectMessageThread[] = [

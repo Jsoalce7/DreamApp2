@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -28,10 +29,10 @@ type BattleRequestFormData = z.infer<typeof battleRequestSchema>;
 
 // Mock user data for opponent selection
 const mockOpponents = [
-  { id: "user1", name: "StreamerX" },
-  { id: "user2", name: "GamerPro" },
-  { id: "user3", name: "CreativeCat" },
-  { id: "user4", name: "ArtisticAnt" },
+  { id: "user1", name: "StreamerX", diamonds: 120 },
+  { id: "user2", name: "GamerPro", diamonds: 250 },
+  { id: "user3", name: "CreativeCat", diamonds: 50 },
+  { id: "user4", name: "ArtisticAnt", diamonds: 300 },
 ];
 
 

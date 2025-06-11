@@ -1,9 +1,19 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit3, Mail, Phone, UserCircle2 } from "lucide-react";
+import { Edit3, Mail, Phone, UserCircle2, Gem } from "lucide-react"; // Added Gem
+
+// Minimal Textarea component for profile page, or import if available globally
+const Textarea = ({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
+  <textarea
+    className={`flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    {...props}
+  />
+);
+
 
 export default function ProfilePage() {
   // Placeholder user data
@@ -15,6 +25,7 @@ export default function ProfilePage() {
     bio: "Livestream battle enthusiast. Ready to take on any challenge!",
     battlesWon: 42,
     battlesLost: 10,
+    diamonds: 750, // Added diamonds
   };
 
   return (
@@ -61,7 +72,7 @@ export default function ProfilePage() {
             <Textarea id="bio" defaultValue={user.bio} placeholder="Tell us about yourself..." className="min-h-[100px]" />
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-center pt-4 border-t">
+          <div className="grid grid-cols-3 gap-4 text-center pt-4 border-t">
             <div>
               <p className="text-2xl font-bold text-green-500">{user.battlesWon}</p>
               <p className="text-sm text-muted-foreground">Battles Won</p>
@@ -69,6 +80,13 @@ export default function ProfilePage() {
             <div>
               <p className="text-2xl font-bold text-red-500">{user.battlesLost}</p>
               <p className="text-sm text-muted-foreground">Battles Lost</p>
+            </div>
+            <div>
+              <div className="flex items-center justify-center">
+                <Gem className="h-6 w-6 text-blue-500 mr-1" />
+                <p className="text-2xl font-bold text-blue-500">{(user.diamonds || 0).toLocaleString()}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">Diamonds</p>
             </div>
           </div>
 
@@ -80,11 +98,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-// Minimal Textarea component for profile page, or import if available globally
-const Textarea = ({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
-  <textarea
-    className={`flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-    {...props}
-  />
-);

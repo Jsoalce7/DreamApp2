@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Battle } from "@/types";
@@ -11,16 +12,16 @@ import { ListFilter, Search } from "lucide-react";
 const mockBattles: Battle[] = [
   {
     id: "1",
-    opponentA: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX" },
-    opponentB: { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP" },
+    opponentA: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120 },
+    opponentB: { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP", diamonds: 250 },
     dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
     mode: "1v1 Duel",
     status: "Confirmed",
   },
   {
     id: "2",
-    opponentA: { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC" },
-    opponentB: { id: "user4", name: "ArtisticAnt", avatarUrl: "https://placehold.co/40x40.png?text=AA" },
+    opponentA: { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50 },
+    opponentB: { id: "user4", name: "ArtisticAnt", avatarUrl: "https://placehold.co/40x40.png?text=AA", diamonds: 300 },
     dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
     mode: "Team Clash",
     status: "Pending",
@@ -28,24 +29,24 @@ const mockBattles: Battle[] = [
   },
   {
     id: "3",
-    opponentA: { id: "user5", name: "SpeedRunner", avatarUrl: "https://placehold.co/40x40.png?text=SR" },
-    opponentB: { id: "user6", name: "ChillVibes", avatarUrl: "https://placehold.co/40x40.png?text=CV" },
+    opponentA: { id: "user5", name: "SpeedRunner", avatarUrl: "https://placehold.co/40x40.png?text=SR", diamonds: 500 },
+    opponentB: { id: "user6", name: "ChillVibes", avatarUrl: "https://placehold.co/40x40.png?text=CV", diamonds: 80 },
     dateTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
     mode: "Fun Mode",
     status: "Completed",
   },
   {
     id: "4",
-    opponentA: { id: "user1", name: "StreamerX" },
-    opponentB: { id: "user5", name: "SpeedRunner" },
+    opponentA: { id: "user1", name: "StreamerX", diamonds: 120 },
+    opponentB: { id: "user5", name: "SpeedRunner", diamonds: 500 },
     dateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Declined",
   },
   {
     id: "5",
-    opponentA: { id: "userCurrentUser", name: "You" , avatarUrl: "https://placehold.co/40x40.png?text=ME"}, // Example for current user
-    opponentB: { id: "user7", name: "ProPlayer7", avatarUrl: "https://placehold.co/40x40.png?text=P7" },
+    opponentA: { id: "userCurrentUser", name: "You" , avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750}, // Example for current user
+    opponentB: { id: "user7", name: "ProPlayer7", avatarUrl: "https://placehold.co/40x40.png?text=P7", diamonds: 1000 },
     dateTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Requested",
