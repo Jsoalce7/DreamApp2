@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/Logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 
 const navItems = [
   { href: '/battles', label: 'Battles' },
@@ -44,6 +44,7 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
+                <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
                 <nav className="flex flex-col space-y-4 mt-8">
                   {navItems.map((item) => (
                      <Button key={item.href} variant="ghost" asChild className="w-full justify-start text-lg">
