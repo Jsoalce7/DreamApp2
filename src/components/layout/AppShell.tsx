@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-      <Footer />
+      {!isMessagesPage && <Footer />}
     </div>
   );
 }
