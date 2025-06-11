@@ -9,29 +9,40 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ListFilter, Search } from "lucide-react";
 
-const mockBattles: Battle[] = [
+// Standardized current user ID
+const currentUserId = "currentUser"; 
+
+const initialMockBattles: Battle[] = [
   {
-    id: "1",
+    id: "1", // Not involving currentUser
     opponentA: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120 },
     opponentB: { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP", diamonds: 250 },
-    dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+    dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), 
+    mode: "1v1 Duel",
+    status: "Confirmed",
+  },
+  { // New confirmed battle for the current user
+    id: "confirmedUserBattle01",
+    opponentA: { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 },
+    opponentB: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120 },
+    dateTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Confirmed",
   },
   {
-    id: "2",
+    id: "2", // Pending, involving currentUser
     opponentA: { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50 },
-    opponentB: { id: "user4", name: "ArtisticAnt", avatarUrl: "https://placehold.co/40x40.png?text=AA", diamonds: 300 },
-    dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+    opponentB: { id: "currentUser", name: "ArtisticAnt (You)", avatarUrl: "https://placehold.co/40x40.png?text=AA", diamonds: 300 },
+    dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), 
     mode: "Team Clash",
-    status: "Pending",
-    requestedToUserId: "user4", // Assume current user is user4 for testing accept/decline
+    status: "Pending", // Will be filtered out from "Upcoming Battles" initial list
+    requestedToUserId: "currentUser", 
   },
   {
     id: "3",
     opponentA: { id: "user5", name: "SpeedRunner", avatarUrl: "https://placehold.co/40x40.png?text=SR", diamonds: 500 },
     opponentB: { id: "user6", name: "ChillVibes", avatarUrl: "https://placehold.co/40x40.png?text=CV", diamonds: 80 },
-    dateTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    dateTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), 
     mode: "Fun Mode",
     status: "Completed",
   },
@@ -44,32 +55,38 @@ const mockBattles: Battle[] = [
     status: "Declined",
   },
   {
-    id: "5",
-    opponentA: { id: "userCurrentUser", name: "You" , avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750}, // Example for current user
+    id: "5", // Requested by currentUser
+    opponentA: { id: "currentUser", name: "You" , avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750}, 
     opponentB: { id: "user7", name: "ProPlayer7", avatarUrl: "https://placehold.co/40x40.png?text=P7", diamonds: 1000 },
     dateTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
-    status: "Requested",
-    requestedByUserId: "userCurrentUser",
+    status: "Requested", // Will be filtered out
+    requestedByUserId: "currentUser",
     requestedToUserId: "user7",
   },
 ];
 
-// Assume current user for accept/decline logic
-const currentUserId = "user4"; 
 
 export function BattleList() {
   const [battles, setBattles] = useState<Battle[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all"); // "all" or specific status
   const [filterMode, setFilterMode] = useState<string>("all");
 
   useEffect(() => {
-    // In a real app, fetch battles from Firebase here
-    setBattles(mockBattles);
+    // For "Upcoming Battles" tab, only show confirmed battles involving the current user
+    const userConfirmedBattles = initialMockBattles.filter(
+      (battle) =>
+        battle.status === "Confirmed" &&
+        (battle.opponentA.id === currentUserId || battle.opponentB.id === currentUserId)
+    );
+    setBattles(userConfirmedBattles);
   }, []);
 
   const handleStatusUpdate = (battleId: string, newStatus: Battle["status"]) => {
+    // This update logic might need to be smarter if it affects the "Upcoming Battles" list
+    // e.g. if a battle is no longer "Confirmed" or no longer involves the user.
+    // For now, it just updates status locally.
     setBattles(prevBattles => 
       prevBattles.map(b => b.id === battleId ? { ...b, status: newStatus } : b)
     );
@@ -104,8 +121,9 @@ export function BattleList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
+            {/* Since data is pre-filtered to "Confirmed", other options might not show results */}
             <SelectItem value="Confirmed">Confirmed</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
             <SelectItem value="Declined">Declined</SelectItem>
             <SelectItem value="Requested">Requested</SelectItem>
@@ -138,8 +156,8 @@ export function BattleList() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-xl text-muted-foreground">No battles found matching your criteria.</p>
-          <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters or search term.</p>
+          <p className="text-xl text-muted-foreground">No upcoming battles found for you.</p>
+          <p className="text-sm text-muted-foreground mt-2">Check back later or request a new battle!</p>
         </div>
       )}
     </div>

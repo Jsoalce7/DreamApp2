@@ -7,27 +7,30 @@ import { useState, useEffect } from 'react';
 import { Info, Inbox } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Standardized current user ID
+const currentUserId = "currentUser"; 
+
 // Mock data - in a real app, this would come from a dynamic source
-const mockBattles: Battle[] = [
+const mockInboxBattles: Battle[] = [
   {
-    id: "1",
+    id: "inbox_b1", // Example Confirmed battle, won't show in inbox
     opponentA: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120 },
-    opponentB: { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP", diamonds: 250 },
+    opponentB: { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 250 },
     dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Confirmed",
   },
   {
-    id: "2",
+    id: "inbox_b2", // Pending request for currentUser
     opponentA: { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50 },
-    opponentB: { id: "user4", name: "ArtisticAnt", avatarUrl: "https://placehold.co/40x40.png?text=AA", diamonds: 300 },
+    opponentB: { id: "currentUser", name: "ArtisticAnt (You)", avatarUrl: "https://placehold.co/40x40.png?text=AA", diamonds: 300 },
     dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "Team Clash",
     status: "Pending",
-    requestedToUserId: "user4", // This request is for user4
+    requestedToUserId: "currentUser", 
   },
   {
-    id: "3",
+    id: "inbox_b3", // Completed, won't show
     opponentA: { id: "user5", name: "SpeedRunner", avatarUrl: "https://placehold.co/40x40.png?text=SR", diamonds: 500 },
     opponentB: { id: "user6", name: "ChillVibes", avatarUrl: "https://placehold.co/40x40.png?text=CV", diamonds: 80 },
     dateTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
@@ -35,36 +38,32 @@ const mockBattles: Battle[] = [
     status: "Completed",
   },
    {
-    id: "6", // New pending request for user4
+    id: "inbox_b6", // New pending request for currentUser
     opponentA: { id: "user8", name: "StrategistSam", avatarUrl: "https://placehold.co/40x40.png?text=SS", diamonds: 600 },
-    opponentB: { id: "user4", name: "TacticalTina", avatarUrl: "https://placehold.co/40x40.png?text=TT", diamonds: 100 },
+    opponentB: { id: "currentUser", name: "TacticalTina (You)", avatarUrl: "https://placehold.co/40x40.png?text=TT", diamonds: 100 },
     dateTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Pending",
-    requestedToUserId: "user4", // This request is also for user4
+    requestedToUserId: "currentUser", 
   },
   {
-    id: "5",
-    opponentA: { id: "userCurrentUser", name: "You" , avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750},
+    id: "inbox_b5", // Outgoing request from currentUser, won't show in *their* inbox
+    opponentA: { id: "currentUser", name: "You" , avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750},
     opponentB: { id: "user7", name: "ProPlayer7", avatarUrl: "https://placehold.co/40x40.png?text=P7", diamonds: 1000 },
     dateTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
-    status: "Requested", // This is an outgoing request from "You", not for the inbox of user4
-    requestedByUserId: "userCurrentUser",
+    status: "Requested", 
+    requestedByUserId: "currentUser",
     requestedToUserId: "user7",
   },
 ];
 
-// Assume current user for accept/decline logic. In a real app, this would come from auth.
-const currentUserId = "user4"; 
 
 export function BattleRequestInbox() {
   const [battles, setBattles] = useState<Battle[]>([]);
   
   useEffect(() => {
-    // In a real app, fetch battles from Firebase/backend here
-    // For now, filter mockBattles for the inbox
-    const inboxRequests = mockBattles.filter(
+    const inboxRequests = mockInboxBattles.filter(
       (battle) => battle.status === "Pending" && battle.requestedToUserId === currentUserId
     );
     setBattles(inboxRequests);
@@ -73,11 +72,12 @@ export function BattleRequestInbox() {
   const handleStatusUpdate = (battleId: string, newStatus: Battle["status"]) => {
     setBattles(prevBattles => 
       prevBattles.map(b => b.id === battleId ? { ...b, status: newStatus } : b)
-                   .filter(b => newStatus === "Declined" && b.id === battleId ? false : true) // Remove if declined, or keep if accepted (status changes)
+                   .filter(b => newStatus === "Declined" && b.id === battleId ? false : true) 
     );
     // TODO: Update in Firebase
     console.log(`Battle ${battleId} status updated to ${newStatus} from inbox`);
-    // If accepted, it might move to "Upcoming Battles". If declined, it's just gone from inbox.
+    // If accepted, it might move to "Upcoming Battles" (if current user is part of it and status is Confirmed).
+    // This component doesn't need to manage that move; BattleList will pick it up if data source is shared/refreshed.
   };
 
   return (

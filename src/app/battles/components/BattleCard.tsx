@@ -77,7 +77,7 @@ export function BattleCard({ battle, currentUserId, onStatusUpdate }: BattleCard
           </Badge>
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-grow"> {/* Added flex-grow */}
         <div className="flex flex-col items-center space-y-2 text-center">
           <UserDisplay user={battle.opponentA} />
           <span className="text-muted-foreground font-bold">VS</span>
