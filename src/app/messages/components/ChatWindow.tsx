@@ -162,7 +162,6 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
     if (!activeThread || !otherParticipant) { 
       if (isMobile && activeMobileView === 'chat') {
-         // This case should ideally not be hit if activeThreadId is cleared when going to list
         return (
           <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
             <MessageSquare className="h-16 w-16 mb-4" />
@@ -180,10 +179,9 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
     }
 
     return (
-      // Fullscreen container for chat view (mobile and desktop structure unified here, mobile specific parts inside)
       <div className={cn(
         "flex flex-col bg-background h-full", 
-        isMobile && activeMobileView === 'chat' ? "fixed inset-0 z-60 w-full" : "w-full md:w-2/3" 
+        isMobile && activeMobileView === 'chat' ? "w-full" : "w-full md:w-2/3" 
       )}>
         {isMobile && activeMobileView === 'chat' && (
           <div className="w-full p-3 border-b bg-card flex items-center shrink-0 shadow-sm">
@@ -200,7 +198,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
         <CardHeader className={cn(
             "p-4 border-b bg-card flex-row items-center shrink-0",
-            isMobile && activeMobileView === 'chat' ? "hidden" : "flex" // Hide original header on mobile chat view
+            isMobile && activeMobileView === 'chat' ? "hidden" : "flex" 
         )}>
           <Avatar className="h-8 w-8 mr-2 shrink-0">
             <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
@@ -263,7 +261,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
       <div className="w-full h-full flex flex-col">
         {activeMobileView === 'list' && <SidebarView />}
         {activeMobileView === 'chat' && activeThreadId && <ChatAreaView />}
-        {activeMobileView === 'chat' && !activeThreadId && ( // Fallback if somehow in chat view with no thread
+        {activeMobileView === 'chat' && !activeThreadId && ( 
            <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
             <MessageSquare className="h-16 w-16 mb-4" />
             <p className="text-xl">No chat selected.</p>
@@ -275,7 +273,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   }
 
   return (
-    <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl"> {/* Adjusted height for better viewport fit */}
+    <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl">
       <SidebarView />
       <ChatAreaView />
     </Card>

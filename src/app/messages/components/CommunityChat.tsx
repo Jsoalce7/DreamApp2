@@ -204,14 +204,13 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     return (
       <div className={cn(
         "flex flex-col bg-background h-full", 
-        isMobile && activeMobileView === 'chat' ? "fixed inset-0 z-60 w-full" : "w-full md:w-2/3" 
+        isMobile && activeMobileView === 'chat' ? "w-full" : "w-full md:w-2/3" 
       )}>
         {isMobile && activeMobileView === 'chat' && (
            <div className="w-full p-3 border-b bg-card flex items-center shrink-0 shadow-sm">
             <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            {/* Community channels don't have a single "other participant" avatar, so we use a generic icon or channel name */}
             <Users className="h-6 w-6 mr-3 text-primary shrink-0" /> 
             <h2 className="text-lg font-semibold truncate flex-grow">{activeChannel?.name || "Channel"}</h2>
           </div>
@@ -219,7 +218,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
         
         <CardHeader className={cn(
             "p-4 border-b bg-card flex-row items-center shrink-0",
-             isMobile && activeMobileView === 'chat' ? "hidden" : "flex" // Hide original header on mobile chat view
+             isMobile && activeMobileView === 'chat' ? "hidden" : "flex" 
         )}>
           <div className="flex-grow truncate">
             <CardTitle className="text-lg truncate"> 
@@ -299,7 +298,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
        <div className="w-full h-full flex flex-col">
         {activeMobileView === 'list' && <ChannelListView />}
         {activeMobileView === 'chat' && activeChannelId && <ChannelChatView />}
-         {activeMobileView === 'chat' && !activeChannelId && ( // Fallback
+         {activeMobileView === 'chat' && !activeChannelId && ( 
            <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
             <MessageCircle className="h-16 w-16 mb-4" />
             <p className="text-xl">No channel selected.</p>
@@ -311,7 +310,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
   }
 
   return (
-    <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl"> {/* Adjusted height */}
+    <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl">
       <ChannelListView />
       <ChannelChatView />
     </Card>
