@@ -98,14 +98,16 @@ export function ChatWindow() {
 
   const handleBackToList = () => {
     setActiveMobileView('list');
+    // Optional: Clear activeThreadId if you want the list to not have a selection
+    // setActiveThreadId(null); 
   };
 
   const SidebarView = () => (
     <div className={cn(
-      "flex flex-col bg-card",
-      isMobile ? "w-full h-full" : "w-full md:w-1/3 border-r"
+      "flex flex-col bg-card h-full", // Ensure h-full for list view
+      isMobile ? "w-full" : "w-full md:w-1/3 border-r"
     )}>
-      <CardHeader className="p-4 border-b">
+      <CardHeader className="p-4 border-b shrink-0">
         <Input placeholder="Search DMs..." icon={<Search className="h-4 w-4 text-muted-foreground" />} />
       </CardHeader>
       <ScrollArea className="flex-grow">
@@ -143,42 +145,50 @@ export function ChatWindow() {
   );
 
   const ChatAreaView = () => {
-    if (!activeThread) {
-      // Placeholder for desktop or if somehow in chat view without active thread on mobile
+    if (!activeThread && !(isMobile && activeMobileView === 'chat')) {
       return (
-        <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
+        <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
           <MessageSquare className="h-16 w-16 mb-4" />
-          <p className="text-xl">{isMobile ? "Select a chat" : "Select a chat to start messaging"}</p>
-          {isMobile && (
-            <Button onClick={handleBackToList} variant="outline" className="mt-4">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
-            </Button>
-          )}
+          <p className="text-xl">Select a chat to start messaging</p>
         </div>
       );
     }
+    if (!activeThread && isMobile && activeMobileView === 'chat') {
+        // This case should ideally not happen if activeThreadId is cleared on back.
+        // But as a fallback:
+        return (
+             <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
+                <MessageSquare className="h-16 w-16 mb-4" />
+                <p className="text-xl">No active chat.</p>
+                <Button onClick={handleBackToList} variant="outline" className="mt-4">
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
+                </Button>
+            </div>
+        );
+    }
+
 
     return (
       <div className={cn(
-        "flex flex-col bg-background",
-        isMobile ? "w-full h-full" : "w-full md:w-2/3"
+        "flex flex-col bg-background h-full", // Ensure h-full for chat area
+        isMobile ? "w-full" : "w-full md:w-2/3"
       )}>
-        <CardHeader className="p-4 border-b bg-card flex flex-row items-center">
-          {isMobile && (
+        <CardHeader className="p-4 border-b bg-card flex flex-row items-center shrink-0">
+          {isMobile && ( // Back button only for mobile chat view
             <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           <Avatar className="h-8 w-8 mr-2 shrink-0">
-            <AvatarImage src={getOtherParticipant(activeThread)?.avatarUrl} alt={getOtherParticipant(activeThread)?.name} data-ai-hint="profile avatar"/>
-            <AvatarFallback>{getOtherParticipant(activeThread)?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={getOtherParticipant(activeThread!)?.avatarUrl} alt={getOtherParticipant(activeThread!)?.name} data-ai-hint="profile avatar"/>
+            <AvatarFallback>{getOtherParticipant(activeThread!)?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <CardTitle className="text-lg truncate">
-            {getOtherParticipant(activeThread)?.name || "Chat"}
+            {getOtherParticipant(activeThread!)?.name || "Chat"}
           </CardTitle>
         </CardHeader>
         <ScrollArea className="flex-grow p-4 space-y-4">
-          {activeThread.messages.map(msg => (
+          {activeThread!.messages.map(msg => (
             <div
               key={msg.id}
               className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
@@ -205,7 +215,7 @@ export function ChatWindow() {
           ))}
           <div ref={messagesEndRef} />
         </ScrollArea>
-        <CardFooter className="p-4 border-t bg-card">
+        <CardFooter className="p-4 border-t bg-card shrink-0">
           <div className="flex w-full space-x-2">
             <Input
               placeholder="Type a message..."
@@ -226,7 +236,10 @@ export function ChatWindow() {
 
   if (isMobile) {
     return (
-      <div className="w-full h-full flex flex-col"> {/* Occupy space given by parent TabContent */}
+      <div className={cn(
+        "w-full h-full", 
+        activeMobileView === 'chat' ? "fixed inset-0 z-60 bg-background flex flex-col" : "flex flex-col" 
+      )}>
         {activeMobileView === 'list' ? <SidebarView /> : <ChatAreaView />}
       </div>
     );

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, ShieldAlert, ShieldCheck, Users, ArrowLeft, MessageCircle } from "lucide-react"; // Added ArrowLeft, MessageCircle
+import { Send, ShieldAlert, ShieldCheck, Users, ArrowLeft, MessageCircle } from "lucide-react"; 
 import { moderateCommunityChatMessage, type ModerateCommunityChatMessageOutput } from "@/ai/flows/community-moderator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -136,14 +136,16 @@ export function CommunityChat() {
 
   const handleBackToList = () => {
     setActiveMobileView('list');
+    // Optional: Clear activeChannelId if you want the list to not have a selection
+    // setActiveChannelId(null);
   };
 
   const ChannelListView = () => (
     <div className={cn(
-      "flex flex-col bg-card",
-      isMobile ? "w-full h-full" : "w-full md:w-1/3 border-r"
+      "flex flex-col bg-card h-full", // Ensure h-full for list view
+      isMobile ? "w-full" : "w-full md:w-1/3 border-r"
     )}>
-      <CardHeader className="p-4 border-b">
+      <CardHeader className="p-4 border-b shrink-0">
         <CardTitle className="text-lg flex items-center">
           <Users className="mr-2 h-5 w-5 text-primary" /> Community Channels
         </CardTitle>
@@ -167,39 +169,46 @@ export function CommunityChat() {
   );
 
   const ChannelChatView = () => {
-    if (!activeChannel) {
+    if (!activeChannel && !(isMobile && activeMobileView === 'chat')) {
       return (
-        <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
+        <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
           <MessageCircle className="h-16 w-16 mb-4" />
-          <p className="text-xl">{isMobile ? "Select a channel" : "Select a channel to start chatting"}</p>
-           {isMobile && (
-            <Button onClick={handleBackToList} variant="outline" className="mt-4">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
-            </Button>
-          )}
+          <p className="text-xl">Select a channel to start chatting</p>
         </div>
       );
     }
+     if (!activeChannel && isMobile && activeMobileView === 'chat') {
+        return (
+             <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
+                <MessageCircle className="h-16 w-16 mb-4" />
+                <p className="text-xl">No active channel.</p>
+                <Button onClick={handleBackToList} variant="outline" className="mt-4">
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
+                </Button>
+            </div>
+        );
+    }
+
     return (
       <div className={cn(
-        "flex flex-col bg-background",
-        isMobile ? "w-full h-full" : "w-full md:w-2/3"
+        "flex flex-col bg-background h-full", // Ensure h-full for chat area
+        isMobile ? "w-full" : "w-full md:w-2/3"
       )}>
-        <CardHeader className="p-4 border-b bg-card flex flex-row items-center">
-          {isMobile && (
+        <CardHeader className="p-4 border-b bg-card flex flex-row items-center shrink-0">
+          {isMobile && ( // Back button only for mobile chat view
             <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           <div className="flex-grow truncate">
             <CardTitle className="text-lg truncate"> 
-              {activeChannel.name}
+              {activeChannel!.name}
             </CardTitle>
-            {activeChannel.description && <p className="text-sm text-muted-foreground truncate">{activeChannel.description}</p>}
+            {activeChannel!.description && <p className="text-sm text-muted-foreground truncate">{activeChannel!.description}</p>}
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow p-4 space-y-4">
-          {activeChannel.messages.map(msg => (
+          {activeChannel!.messages.map(msg => (
             <div
               key={msg.id}
               className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
@@ -238,10 +247,10 @@ export function CommunityChat() {
           ))}
           <div ref={messagesEndRef} />
         </ScrollArea>
-        <CardFooter className="p-4 border-t bg-card">
+        <CardFooter className="p-4 border-t bg-card shrink-0">
           <div className="flex w-full space-x-2">
             <Textarea
-              placeholder={`Message ${activeChannel.name}...`}
+              placeholder={`Message ${activeChannel!.name}...`}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => {
@@ -266,7 +275,10 @@ export function CommunityChat() {
 
   if (isMobile) {
     return (
-      <div className="w-full h-full flex flex-col"> {/* Occupy space given by parent TabContent */}
+       <div className={cn(
+        "w-full h-full", 
+        activeMobileView === 'chat' ? "fixed inset-0 z-60 bg-background flex flex-col" : "flex flex-col" 
+      )}>
         {activeMobileView === 'list' ? <ChannelListView /> : <ChannelChatView />}
       </div>
     );
