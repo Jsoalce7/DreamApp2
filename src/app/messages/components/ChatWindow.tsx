@@ -43,16 +43,25 @@ const mockThreads: DirectMessageThread[] = [
   },
 ];
 
+type MobileChatView = "list" | "chat";
 
-export function ChatWindow() {
+interface ChatWindowProps {
+  onMobileViewChange?: (view: MobileChatView) => void;
+}
+
+export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [threads, setThreads] = useState<DirectMessageThread[]>(mockThreads);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const [activeMobileView, setActiveMobileView] = useState<'list' | 'chat'>('list');
+  const [activeMobileView, setActiveMobileView] = useState<MobileChatView>('list');
 
   const activeThread = threads.find(t => t.id === activeThreadId);
+
+  useEffect(() => {
+    onMobileViewChange?.(activeMobileView);
+  }, [activeMobileView, onMobileViewChange]);
 
   useEffect(() => {
     if (activeMobileView === 'chat' || !isMobile) {
@@ -61,8 +70,13 @@ export function ChatWindow() {
   }, [activeThread?.messages, activeMobileView, isMobile]);
 
   useEffect(() => {
+    // If on mobile, in chat view, but no thread selected (e.g. after a hot reload or state loss), go back to list.
+    // Also, if switching from desktop to mobile while a chat is open, ensure correct mobile view.
     if (isMobile && activeMobileView === 'chat' && !activeThreadId) {
       setActiveMobileView('list');
+    }
+    if (!isMobile && activeThreadId) { // If switching to desktop with an active thread, ensure list isn't 'chat'
+        // No direct action needed for activeMobileView as it's mobile-specific, but ensures no weird state persistence
     }
   }, [isMobile, activeMobileView, activeThreadId]);
 
@@ -98,13 +112,13 @@ export function ChatWindow() {
 
   const handleBackToList = () => {
     setActiveMobileView('list');
-    // Optional: Clear activeThreadId if you want the list to not have a selection
+    // Optional: Clear activeThreadId if you want the list to not have a selection when going back
     // setActiveThreadId(null); 
   };
 
   const SidebarView = () => (
     <div className={cn(
-      "flex flex-col bg-card h-full", // Ensure h-full for list view
+      "flex flex-col bg-card h-full", 
       isMobile ? "w-full" : "w-full md:w-1/3 border-r"
     )}>
       <CardHeader className="p-4 border-b shrink-0">
@@ -118,7 +132,7 @@ export function ChatWindow() {
           return (
             <Button
               key={thread.id}
-              variant={activeThreadId === thread.id ? "secondary" : "ghost"}
+              variant={activeThreadId === thread.id && !isMobile ? "secondary" : "ghost"} // Don't show active selection in list on mobile
               className="w-full justify-start p-4 h-auto rounded-none border-b"
               onClick={() => handleThreadSelect(thread.id)}
             >
@@ -145,7 +159,7 @@ export function ChatWindow() {
   );
 
   const ChatAreaView = () => {
-    if (!activeThread && !(isMobile && activeMobileView === 'chat')) {
+    if (!activeThread) { // Simplified this condition for desktop
       return (
         <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
           <MessageSquare className="h-16 w-16 mb-4" />
@@ -153,28 +167,15 @@ export function ChatWindow() {
         </div>
       );
     }
-    if (!activeThread && isMobile && activeMobileView === 'chat') {
-        // This case should ideally not happen if activeThreadId is cleared on back.
-        // But as a fallback:
-        return (
-             <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
-                <MessageSquare className="h-16 w-16 mb-4" />
-                <p className="text-xl">No active chat.</p>
-                <Button onClick={handleBackToList} variant="outline" className="mt-4">
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
-                </Button>
-            </div>
-        );
-    }
 
-
+    // This component will be rendered inside the fixed fullscreen div on mobile
     return (
       <div className={cn(
-        "flex flex-col bg-background h-full", // Ensure h-full for chat area
-        isMobile ? "w-full" : "w-full md:w-2/3"
+        "flex flex-col bg-background h-full", 
+        isMobile ? "w-full" : "w-full md:w-2/3" // On mobile, this div is inside the fullscreen container
       )}>
         <CardHeader className="p-4 border-b bg-card flex flex-row items-center shrink-0">
-          {isMobile && ( // Back button only for mobile chat view
+          {isMobile && ( 
             <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
               <ArrowLeft className="h-5 w-5" />
             </Button>

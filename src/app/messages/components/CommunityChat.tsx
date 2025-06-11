@@ -36,7 +36,13 @@ const initialChannels: CommunityChannel[] = [
   }
 ];
 
-export function CommunityChat() {
+type MobileChatView = "list" | "chat";
+
+interface CommunityChatProps {
+  onMobileViewChange?: (view: MobileChatView) => void;
+}
+
+export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
   const [channels, setChannels] = useState<CommunityChannel[]>(initialChannels);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
@@ -44,9 +50,13 @@ export function CommunityChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const [activeMobileView, setActiveMobileView] = useState<'list' | 'chat'>('list');
+  const [activeMobileView, setActiveMobileView] = useState<MobileChatView>('list');
 
   const activeChannel = channels.find(c => c.id === activeChannelId);
+
+  useEffect(() => {
+    onMobileViewChange?.(activeMobileView);
+  }, [activeMobileView, onMobileViewChange]);
 
   useEffect(() => {
     if (activeMobileView === 'chat' || !isMobile) {
@@ -57,6 +67,9 @@ export function CommunityChat() {
   useEffect(() => {
     if (isMobile && activeMobileView === 'chat' && !activeChannelId) {
       setActiveMobileView('list');
+    }
+     if (!isMobile && activeChannelId) {
+        // No direct action needed for activeMobileView as it's mobile-specific
     }
   }, [isMobile, activeMobileView, activeChannelId]);
 
@@ -136,13 +149,13 @@ export function CommunityChat() {
 
   const handleBackToList = () => {
     setActiveMobileView('list');
-    // Optional: Clear activeChannelId if you want the list to not have a selection
+    // Optional: Clear activeChannelId
     // setActiveChannelId(null);
   };
 
   const ChannelListView = () => (
     <div className={cn(
-      "flex flex-col bg-card h-full", // Ensure h-full for list view
+      "flex flex-col bg-card h-full", 
       isMobile ? "w-full" : "w-full md:w-1/3 border-r"
     )}>
       <CardHeader className="p-4 border-b shrink-0">
@@ -154,7 +167,7 @@ export function CommunityChat() {
         {channels.map(channel => (
           <Button
             key={channel.id}
-            variant={activeChannelId === channel.id ? "secondary" : "ghost"}
+            variant={activeChannelId === channel.id && !isMobile ? "secondary" : "ghost"} // Don't show active selection in list on mobile
             className="w-full justify-start p-4 h-auto rounded-none border-b"
             onClick={() => handleChannelSelect(channel.id)}
           >
@@ -169,7 +182,7 @@ export function CommunityChat() {
   );
 
   const ChannelChatView = () => {
-    if (!activeChannel && !(isMobile && activeMobileView === 'chat')) {
+     if (!activeChannel) { // Simplified for desktop
       return (
         <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
           <MessageCircle className="h-16 w-16 mb-4" />
@@ -177,25 +190,14 @@ export function CommunityChat() {
         </div>
       );
     }
-     if (!activeChannel && isMobile && activeMobileView === 'chat') {
-        return (
-             <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
-                <MessageCircle className="h-16 w-16 mb-4" />
-                <p className="text-xl">No active channel.</p>
-                <Button onClick={handleBackToList} variant="outline" className="mt-4">
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
-                </Button>
-            </div>
-        );
-    }
 
     return (
       <div className={cn(
-        "flex flex-col bg-background h-full", // Ensure h-full for chat area
-        isMobile ? "w-full" : "w-full md:w-2/3"
+        "flex flex-col bg-background h-full", 
+        isMobile ? "w-full" : "w-full md:w-2/3" // On mobile, this div is inside the fullscreen container
       )}>
         <CardHeader className="p-4 border-b bg-card flex flex-row items-center shrink-0">
-          {isMobile && ( // Back button only for mobile chat view
+          {isMobile && ( 
             <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
