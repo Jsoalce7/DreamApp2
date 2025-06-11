@@ -72,11 +72,12 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   useEffect(() => {
     if (isMobile && activeMobileView === 'chat' && !activeThreadId) {
       setActiveMobileView('list');
+      onMobileViewChange?.('list');
     }
     if (!isMobile && activeThreadId) { 
         // No direct action needed for activeMobileView as it's mobile-specific
     }
-  }, [isMobile, activeMobileView, activeThreadId]);
+  }, [isMobile, activeMobileView, activeThreadId, onMobileViewChange]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !activeThread) return;
@@ -105,12 +106,13 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
     setActiveThreadId(threadId);
     if (isMobile) {
       setActiveMobileView('chat');
+      onMobileViewChange?.('chat');
     }
   };
 
   const handleBackToList = () => {
     setActiveMobileView('list');
-     onMobileViewChange?.('list'); // Explicitly notify parent
+    onMobileViewChange?.('list'); 
   };
 
   const SidebarView = () => (
@@ -156,9 +158,21 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   );
 
   const ChatAreaView = () => {
-    if (!activeThread) { 
+    const otherParticipant = activeThread ? getOtherParticipant(activeThread) : null;
+
+    if (!activeThread || !otherParticipant) { 
+      if (isMobile && activeMobileView === 'chat') {
+         // This case should ideally not be hit if activeThreadId is cleared when going to list
+        return (
+          <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
+            <MessageSquare className="h-16 w-16 mb-4" />
+            <p className="text-xl">Chat not found. Go back to list.</p>
+            <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
+          </div>
+        );
+      }
       return (
-        <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
+        <div className="flex-grow hidden md:flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
           <MessageSquare className="h-16 w-16 mb-4" />
           <p className="text-xl">Select a chat to start messaging</p>
         </div>
@@ -166,24 +180,37 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
     }
 
     return (
+      // Fullscreen container for chat view (mobile and desktop structure unified here, mobile specific parts inside)
       <div className={cn(
         "flex flex-col bg-background h-full", 
-        isMobile ? "w-full" : "w-full md:w-2/3" 
+        isMobile && activeMobileView === 'chat' ? "fixed inset-0 z-60 w-full" : "w-full md:w-2/3" 
       )}>
-        <CardHeader className="p-4 border-b bg-card flex flex-row items-center shrink-0">
-          {isMobile && ( 
+        {isMobile && activeMobileView === 'chat' && (
+          <div className="w-full p-3 border-b bg-card flex items-center shrink-0 shadow-sm">
             <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-          )}
+            <Avatar className="h-8 w-8 mr-3 shrink-0">
+              <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
+              <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <h2 className="text-lg font-semibold truncate flex-grow">{otherParticipant?.name || "Chat"}</h2>
+          </div>
+        )}
+
+        <CardHeader className={cn(
+            "p-4 border-b bg-card flex-row items-center shrink-0",
+            isMobile && activeMobileView === 'chat' ? "hidden" : "flex" // Hide original header on mobile chat view
+        )}>
           <Avatar className="h-8 w-8 mr-2 shrink-0">
-            <AvatarImage src={getOtherParticipant(activeThread!)?.avatarUrl} alt={getOtherParticipant(activeThread!)?.name} data-ai-hint="profile avatar"/>
-            <AvatarFallback>{getOtherParticipant(activeThread!)?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
+            <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <CardTitle className="text-lg truncate">
-            {getOtherParticipant(activeThread!)?.name || "Chat"}
+            {otherParticipant?.name || "Chat"}
           </CardTitle>
         </CardHeader>
+        
         <ScrollArea className="flex-grow p-4 space-y-4">
           {activeThread!.messages.map(msg => (
             <div
@@ -233,17 +260,22 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   if (isMobile) {
     return (
-      <div className={cn(
-        "w-full h-full", 
-        activeMobileView === 'chat' ? "fixed inset-0 z-60 bg-background flex flex-col" : "flex flex-col" 
-      )}>
-        {activeMobileView === 'list' ? <SidebarView /> : <ChatAreaView />}
+      <div className="w-full h-full flex flex-col">
+        {activeMobileView === 'list' && <SidebarView />}
+        {activeMobileView === 'chat' && activeThreadId && <ChatAreaView />}
+        {activeMobileView === 'chat' && !activeThreadId && ( // Fallback if somehow in chat view with no thread
+           <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
+            <MessageSquare className="h-16 w-16 mb-4" />
+            <p className="text-xl">No chat selected.</p>
+            <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <Card className="h-[70vh] flex flex-row shadow-xl">
+    <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl"> {/* Adjusted height for better viewport fit */}
       <SidebarView />
       <ChatAreaView />
     </Card>

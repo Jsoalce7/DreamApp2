@@ -67,11 +67,12 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
   useEffect(() => {
     if (isMobile && activeMobileView === 'chat' && !activeChannelId) {
       setActiveMobileView('list');
+      onMobileViewChange?.('list');
     }
      if (!isMobile && activeChannelId) {
         // No direct action needed for activeMobileView as it's mobile-specific
     }
-  }, [isMobile, activeMobileView, activeChannelId]);
+  }, [isMobile, activeMobileView, activeChannelId, onMobileViewChange]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeChannel) return;
@@ -144,12 +145,13 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     setActiveChannelId(channelId);
     if (isMobile) {
       setActiveMobileView('chat');
+      onMobileViewChange?.('chat');
     }
   };
 
   const handleBackToList = () => {
     setActiveMobileView('list');
-    onMobileViewChange?.('list'); // Explicitly notify parent
+    onMobileViewChange?.('list'); 
   };
 
   const ChannelListView = () => (
@@ -182,25 +184,43 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   const ChannelChatView = () => {
      if (!activeChannel) { 
-      return (
-        <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
-          <MessageCircle className="h-16 w-16 mb-4" />
-          <p className="text-xl">Select a channel to start chatting</p>
-        </div>
-      );
+        if (isMobile && activeMobileView === 'chat') {
+            return (
+              <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
+                <MessageCircle className="h-16 w-16 mb-4" />
+                <p className="text-xl">Channel not found. Go back to list.</p>
+                <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
+              </div>
+            );
+        }
+        return (
+            <div className="flex-grow hidden md:flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
+            <MessageCircle className="h-16 w-16 mb-4" />
+            <p className="text-xl">Select a channel to start chatting</p>
+            </div>
+        );
     }
 
     return (
       <div className={cn(
         "flex flex-col bg-background h-full", 
-        isMobile ? "w-full" : "w-full md:w-2/3" 
+        isMobile && activeMobileView === 'chat' ? "fixed inset-0 z-60 w-full" : "w-full md:w-2/3" 
       )}>
-        <CardHeader className="p-4 border-b bg-card flex flex-row items-center shrink-0">
-          {isMobile && ( 
+        {isMobile && activeMobileView === 'chat' && (
+           <div className="w-full p-3 border-b bg-card flex items-center shrink-0 shadow-sm">
             <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-          )}
+            {/* Community channels don't have a single "other participant" avatar, so we use a generic icon or channel name */}
+            <Users className="h-6 w-6 mr-3 text-primary shrink-0" /> 
+            <h2 className="text-lg font-semibold truncate flex-grow">{activeChannel?.name || "Channel"}</h2>
+          </div>
+        )}
+        
+        <CardHeader className={cn(
+            "p-4 border-b bg-card flex-row items-center shrink-0",
+             isMobile && activeMobileView === 'chat' ? "hidden" : "flex" // Hide original header on mobile chat view
+        )}>
           <div className="flex-grow truncate">
             <CardTitle className="text-lg truncate"> 
               {activeChannel!.name}
@@ -276,17 +296,22 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   if (isMobile) {
     return (
-       <div className={cn(
-        "w-full h-full", 
-        activeMobileView === 'chat' ? "fixed inset-0 z-60 bg-background flex flex-col" : "flex flex-col" 
-      )}>
-        {activeMobileView === 'list' ? <ChannelListView /> : <ChannelChatView />}
+       <div className="w-full h-full flex flex-col">
+        {activeMobileView === 'list' && <ChannelListView />}
+        {activeMobileView === 'chat' && activeChannelId && <ChannelChatView />}
+         {activeMobileView === 'chat' && !activeChannelId && ( // Fallback
+           <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4">
+            <MessageCircle className="h-16 w-16 mb-4" />
+            <p className="text-xl">No channel selected.</p>
+            <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <Card className="h-[70vh] flex flex-row shadow-xl">
+    <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl"> {/* Adjusted height */}
       <ChannelListView />
       <ChannelChatView />
     </Card>
