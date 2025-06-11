@@ -50,13 +50,13 @@ interface ChatWindowProps {
   onMobileViewChange?: (view: MobileChatView) => void;
 }
 
-interface ChatMessageAreaProps {
+interface ChatMessagesProps {
   messages: Message[];
   currentUserId: string;
   messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
-function ChatMessages({ messages, currentUserId, messagesEndRef }: ChatMessageAreaProps) {
+function ChatMessages({ messages, currentUserId, messagesEndRef }: ChatMessagesProps) {
   return (
     <>
       {messages.map(msg => (
@@ -89,6 +89,7 @@ function ChatMessages({ messages, currentUserId, messagesEndRef }: ChatMessageAr
   );
 }
 
+
 interface MobileChatWindowLayoutProps {
   activeMobileView: MobileChatView;
   activeThread: DirectMessageThread | undefined;
@@ -118,7 +119,7 @@ function MobileChatWindowLayout({
 }: MobileChatWindowLayoutProps) {
   
   useEffect(() => {
-    if (activeMobileView === 'chat') {
+    if (activeMobileView === 'chat' && activeThread?.messages.length) {
         messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
     }
   }, [activeThread?.messages, activeMobileView, messagesEndRef]);
@@ -239,12 +240,13 @@ function DesktopChatWindowLayout({
 }: DesktopChatWindowLayoutProps) {
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (activeThread?.messages.length) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [activeThread?.messages, messagesEndRef]);
   
   return (
     <Card className="h-full flex flex-row shadow-xl">
-      {/* SidebarView equivalent for Desktop */}
       <div className="flex flex-col bg-card w-1/3 border-r h-full">
         <CardHeader className="p-4 border-b shrink-0">
           <Input placeholder="Search DMs..." icon={<Search className="h-4 w-4 text-muted-foreground" />} />
@@ -282,7 +284,6 @@ function DesktopChatWindowLayout({
         </ScrollArea>
       </div>
 
-      {/* ChatAreaView equivalent for Desktop */}
       <div className="flex flex-col bg-background w-2/3 h-full">
         {!activeThread || !otherParticipant ? (
           <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
@@ -301,11 +302,9 @@ function DesktopChatWindowLayout({
               </CardTitle>
             </CardHeader>
             
-            <ScrollArea className="flex-grow h-0">
-              <div className="p-4 space-y-4">
-                <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} />
-              </div>
-            </ScrollArea>
+            <div className="flex-grow h-0 overflow-y-auto p-4 space-y-4">
+              <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} />
+            </div>
 
             <CardFooter className="p-4 border-t bg-card shrink-0">
               <div className="flex w-full space-x-2">
@@ -338,6 +337,10 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const isMobile = useIsMobile();
   const [activeMobileView, setActiveMobileView] = useState<MobileChatView>('list');
 
+  const getOtherParticipant = (thread: DirectMessageThread): User | undefined => {
+    return thread.participants.find(p => p.id !== mockCurrentUser.id);
+  };
+
   const activeThread = threads.find(t => t.id === activeThreadId);
   const otherParticipant = activeThread ? getOtherParticipant(activeThread) : null;
 
@@ -351,12 +354,11 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
         onMobileViewChange?.('chat');
       }
     } else { 
-      onMobileViewChange?.(activeThreadId ? 'chat' : 'list'); // For desktop, 'chat' means a chat is selected
+      onMobileViewChange?.(activeThreadId ? 'chat' : 'list'); 
     }
   }, [isMobile, activeThreadId, onMobileViewChange]);
 
   useEffect(() => {
-    // Reset to list view if on mobile and activeThreadId becomes null (e.g. thread deleted)
     if (isMobile && activeMobileView === 'chat' && !activeThreadId) {
       setActiveMobileView('list');
       onMobileViewChange?.('list');
@@ -382,39 +384,39 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
     setNewMessage("");
   };
   
-  const getOtherParticipant = (thread: DirectMessageThread): User | undefined => {
-    return thread.participants.find(p => p.id !== mockCurrentUser.id);
-  };
-
   const handleThreadSelect = (threadId: string) => {
     setActiveThreadId(threadId);
-    // Logic to switch view is handled by useEffect monitoring activeThreadId
   };
 
   const handleBackToList = () => {
     setActiveThreadId(null); 
-    // Logic to switch view is handled by useEffect monitoring activeThreadId
+    if (isMobile) {
+      setActiveMobileView('list'); // Explicitly set view for mobile
+      onMobileViewChange?.('list');
+    }
   };
 
-  if (isMobile === undefined) { // Still determining screen size
+  if (isMobile === undefined) { 
     return <div className="w-full h-full flex items-center justify-center"><p>Loading...</p></div>;
   }
 
   if (isMobile) {
     return (
-      <MobileChatWindowLayout
-        activeMobileView={activeMobileView}
-        activeThread={activeThread}
-        otherParticipant={otherParticipant}
-        threads={threads}
-        newMessage={newMessage}
-        setNewMessage={setNewMessage}
-        handleSendMessage={handleSendMessage}
-        handleThreadSelect={handleThreadSelect}
-        handleBackToList={handleBackToList}
-        getOtherParticipant={getOtherParticipant}
-        messagesEndRef={messagesEndRef}
-      />
+      <div className="w-full h-full flex flex-col">
+        <MobileChatWindowLayout
+          activeMobileView={activeMobileView}
+          activeThread={activeThread}
+          otherParticipant={otherParticipant}
+          threads={threads}
+          newMessage={newMessage}
+          setNewMessage={setNewMessage}
+          handleSendMessage={handleSendMessage}
+          handleThreadSelect={handleThreadSelect}
+          handleBackToList={handleBackToList}
+          getOtherParticipant={getOtherParticipant}
+          messagesEndRef={messagesEndRef}
+        />
+      </div>
     );
   }
 
