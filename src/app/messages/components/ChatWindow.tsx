@@ -1,6 +1,7 @@
 
 "use client";
 
+import type React from 'react';
 import { useState, useEffect, useRef } from "react";
 import type { Message, User, DirectMessageThread } from "@/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,6 +50,286 @@ interface ChatWindowProps {
   onMobileViewChange?: (view: MobileChatView) => void;
 }
 
+interface ChatMessageAreaProps {
+  messages: Message[];
+  currentUserId: string;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+}
+
+function ChatMessages({ messages, currentUserId, messagesEndRef }: ChatMessageAreaProps) {
+  return (
+    <>
+      {messages.map(msg => (
+        <div
+          key={msg.id}
+          className={`flex ${msg.sender.id === currentUserId ? "justify-end" : "justify-start"}`}
+        >
+          <div className={`flex items-end gap-2 max-w-[70%] ${msg.sender.id === currentUserId ? "flex-row-reverse" : "flex-row"}`}>
+            <Avatar className="h-8 w-8">
+                <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
+                <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
+            </Avatar>
+            <div
+                className={`p-3 rounded-lg shadow ${
+                msg.sender.id === currentUserId
+                    ? "bg-primary text-primary-foreground rounded-br-none"
+                    : "bg-card text-card-foreground rounded-bl-none border"
+                }`}
+            >
+                <p className="text-sm">{msg.text}</p>
+                <p className={`text-xs mt-1 ${msg.sender.id === currentUserId ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                {format(parseISO(msg.timestamp), "p")}
+                </p>
+            </div>
+          </div>
+        </div>
+      ))}
+      <div ref={messagesEndRef} />
+    </>
+  );
+}
+
+interface MobileChatWindowLayoutProps {
+  activeMobileView: MobileChatView;
+  activeThread: DirectMessageThread | undefined;
+  otherParticipant: User | null;
+  threads: DirectMessageThread[];
+  newMessage: string;
+  setNewMessage: (value: string) => void;
+  handleSendMessage: () => void;
+  handleThreadSelect: (threadId: string) => void;
+  handleBackToList: () => void;
+  getOtherParticipant: (thread: DirectMessageThread) => User | undefined;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+}
+
+function MobileChatWindowLayout({
+  activeMobileView,
+  activeThread,
+  otherParticipant,
+  threads,
+  newMessage,
+  setNewMessage,
+  handleSendMessage,
+  handleThreadSelect,
+  handleBackToList,
+  getOtherParticipant,
+  messagesEndRef
+}: MobileChatWindowLayoutProps) {
+  
+  useEffect(() => {
+    if (activeMobileView === 'chat') {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
+    }
+  }, [activeThread?.messages, activeMobileView, messagesEndRef]);
+
+  if (activeMobileView === 'list') {
+    return (
+      <div className="flex flex-col bg-card h-full w-full">
+        <CardHeader className="p-4 border-b shrink-0">
+          <Input placeholder="Search DMs..." icon={<Search className="h-4 w-4 text-muted-foreground" />} />
+        </CardHeader>
+        <ScrollArea className="flex-grow">
+          {threads.map(thread => {
+            const otherUser = getOtherParticipant(thread);
+            if (!otherUser) return null;
+            const unread = thread.unreadCount?.[mockCurrentUser.id] || 0;
+            return (
+              <Button
+                key={thread.id}
+                variant="ghost"
+                className="w-full justify-start p-4 h-auto rounded-none border-b"
+                onClick={() => handleThreadSelect(thread.id)}
+              >
+                <Avatar className="h-10 w-10 mr-3">
+                  <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="profile avatar"/>
+                  <AvatarFallback>{otherUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex-grow text-left">
+                  <p className="font-semibold">{otherUser.name}</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[200px]">
+                    {thread.lastMessage?.text || "No messages yet"}
+                  </p>
+                </div>
+                {unread > 0 && (
+                  <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {unread}
+                  </span>
+                )}
+              </Button>
+            );
+          })}
+        </ScrollArea>
+      </div>
+    );
+  }
+
+  // activeMobileView === 'chat'
+  if (!activeThread || !otherParticipant) {
+    return (
+      <div className="flex flex-col w-full h-full items-center justify-center text-muted-foreground p-4 bg-background">
+        <MessageSquare className="h-16 w-16 mb-4" />
+        <p className="text-xl">Chat not found.</p>
+        <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col w-full h-full bg-background">
+      <div className="flex items-center p-3 border-b bg-card shrink-0 shadow-sm">
+        <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <Avatar className="h-8 w-8 mr-3 shrink-0">
+          <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
+          <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <h2 className="text-lg font-semibold truncate flex-grow">{otherParticipant?.name || "Chat"}</h2>
+      </div>
+
+      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+         <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} />
+      </div>
+
+      <div className="p-4 border-t bg-card shrink-0">
+        <div className="flex w-full space-x-2">
+          <Input
+            placeholder="Type a message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+            className="flex-grow"
+          />
+          <Button onClick={handleSendMessage} disabled={!newMessage.trim()} className="bg-accent hover:bg-accent/90">
+            <Send className="h-5 w-5" />
+            <span className="sr-only">Send</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+interface DesktopChatWindowLayoutProps {
+  activeThreadId: string | null;
+  activeThread: DirectMessageThread | undefined;
+  otherParticipant: User | null;
+  threads: DirectMessageThread[];
+  newMessage: string;
+  setNewMessage: (value: string) => void;
+  handleSendMessage: () => void;
+  handleThreadSelect: (threadId: string) => void;
+  getOtherParticipant: (thread: DirectMessageThread) => User | undefined;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+}
+
+function DesktopChatWindowLayout({
+  activeThreadId,
+  activeThread,
+  otherParticipant,
+  threads,
+  newMessage,
+  setNewMessage,
+  handleSendMessage,
+  handleThreadSelect,
+  getOtherParticipant,
+  messagesEndRef
+}: DesktopChatWindowLayoutProps) {
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeThread?.messages, messagesEndRef]);
+  
+  return (
+    <Card className="h-full flex flex-row shadow-xl">
+      {/* SidebarView equivalent for Desktop */}
+      <div className="flex flex-col bg-card w-1/3 border-r h-full">
+        <CardHeader className="p-4 border-b shrink-0">
+          <Input placeholder="Search DMs..." icon={<Search className="h-4 w-4 text-muted-foreground" />} />
+        </CardHeader>
+        <ScrollArea className="flex-grow">
+          {threads.map(thread => {
+            const otherUser = getOtherParticipant(thread);
+            if (!otherUser) return null;
+            const unread = thread.unreadCount?.[mockCurrentUser.id] || 0;
+            return (
+              <Button
+                key={thread.id}
+                variant={activeThreadId === thread.id ? "secondary" : "ghost"} 
+                className="w-full justify-start p-4 h-auto rounded-none border-b"
+                onClick={() => handleThreadSelect(thread.id)}
+              >
+                <Avatar className="h-10 w-10 mr-3">
+                  <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="profile avatar"/>
+                  <AvatarFallback>{otherUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex-grow text-left">
+                  <p className="font-semibold">{otherUser.name}</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[200px]">
+                    {thread.lastMessage?.text || "No messages yet"}
+                  </p>
+                </div>
+                {unread > 0 && (
+                  <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {unread}
+                  </span>
+                )}
+              </Button>
+            );
+          })}
+        </ScrollArea>
+      </div>
+
+      {/* ChatAreaView equivalent for Desktop */}
+      <div className="flex flex-col bg-background w-2/3 h-full">
+        {!activeThread || !otherParticipant ? (
+          <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
+            <MessageSquare className="h-16 w-16 mb-4" />
+            <p className="text-xl">Select a chat to start messaging</p>
+          </div>
+        ) : (
+          <>
+            <CardHeader className="p-4 border-b bg-card flex-row items-center shrink-0">
+              <Avatar className="h-8 w-8 mr-2 shrink-0">
+                <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
+                <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <CardTitle className="text-lg truncate">
+                {otherParticipant?.name || "Chat"}
+              </CardTitle>
+            </CardHeader>
+            
+            <ScrollArea className="flex-grow h-0">
+              <div className="p-4 space-y-4">
+                <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} />
+              </div>
+            </ScrollArea>
+
+            <CardFooter className="p-4 border-t bg-card shrink-0">
+              <div className="flex w-full space-x-2">
+                <Input
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                  className="flex-grow"
+                />
+                <Button onClick={handleSendMessage} disabled={!newMessage.trim()} className="bg-accent hover:bg-accent/90">
+                  <Send className="h-5 w-5" />
+                  <span className="sr-only">Send</span>
+                </Button>
+              </div>
+            </CardFooter>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+
 export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [threads, setThreads] = useState<DirectMessageThread[]>(mockThreads);
@@ -58,6 +339,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const [activeMobileView, setActiveMobileView] = useState<MobileChatView>('list');
 
   const activeThread = threads.find(t => t.id === activeThreadId);
+  const otherParticipant = activeThread ? getOtherParticipant(activeThread) : null;
 
   useEffect(() => {
      if (isMobile) {
@@ -69,18 +351,12 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
         onMobileViewChange?.('chat');
       }
     } else { 
-      onMobileViewChange?.(activeThreadId ? 'chat' : 'list'); 
+      onMobileViewChange?.(activeThreadId ? 'chat' : 'list'); // For desktop, 'chat' means a chat is selected
     }
   }, [isMobile, activeThreadId, onMobileViewChange]);
 
-
   useEffect(() => {
-    if (activeMobileView === 'chat' || !isMobile) {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [activeThread?.messages, activeMobileView, isMobile]);
-
-  useEffect(() => {
+    // Reset to list view if on mobile and activeThreadId becomes null (e.g. thread deleted)
     if (isMobile && activeMobileView === 'chat' && !activeThreadId) {
       setActiveMobileView('list');
       onMobileViewChange?.('list');
@@ -112,183 +388,48 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   const handleThreadSelect = (threadId: string) => {
     setActiveThreadId(threadId);
-    if (isMobile) {
-      setActiveMobileView('chat'); 
-      onMobileViewChange?.('chat');
-    } else {
-      onMobileViewChange?.('chat'); 
-    }
+    // Logic to switch view is handled by useEffect monitoring activeThreadId
   };
 
   const handleBackToList = () => {
     setActiveThreadId(null); 
-    setActiveMobileView('list');
-    onMobileViewChange?.('list'); 
+    // Logic to switch view is handled by useEffect monitoring activeThreadId
   };
 
-  const SidebarView = () => (
-    <div className={cn(
-      "flex flex-col bg-card h-full", 
-      isMobile ? "w-full" : "w-full md:w-1/3 border-r"
-    )}>
-      <CardHeader className="p-4 border-b shrink-0">
-        <Input placeholder="Search DMs..." icon={<Search className="h-4 w-4 text-muted-foreground" />} />
-      </CardHeader>
-      <ScrollArea className="flex-grow">
-        {threads.map(thread => {
-          const otherUser = getOtherParticipant(thread);
-          if (!otherUser) return null;
-          const unread = thread.unreadCount?.[mockCurrentUser.id] || 0;
-          return (
-            <Button
-              key={thread.id}
-              variant={activeThreadId === thread.id && !isMobile ? "secondary" : "ghost"} 
-              className="w-full justify-start p-4 h-auto rounded-none border-b"
-              onClick={() => handleThreadSelect(thread.id)}
-            >
-              <Avatar className="h-10 w-10 mr-3">
-                <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="profile avatar"/>
-                <AvatarFallback>{otherUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="flex-grow text-left">
-                <p className="font-semibold">{otherUser.name}</p>
-                <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[200px]">
-                  {thread.lastMessage?.text || "No messages yet"}
-                </p>
-              </div>
-              {unread > 0 && (
-                <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {unread}
-                </span>
-              )}
-            </Button>
-          );
-        })}
-      </ScrollArea>
-    </div>
-  );
-
-  const ChatAreaView = () => {
-    const otherParticipant = activeThread ? getOtherParticipant(activeThread) : null;
-
-    if (!activeThread || !otherParticipant) { 
-      if (isMobile && activeMobileView === 'chat') {
-        return (
-          <div className="flex-grow flex flex-col h-full items-center justify-center text-muted-foreground p-4">
-            <MessageSquare className="h-16 w-16 mb-4" />
-            <p className="text-xl">Chat not found or selected.</p>
-            <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
-          </div>
-        );
-      }
-      return (
-        <div className="flex-grow hidden md:flex flex-col items-center justify-center text-muted-foreground p-4 h-full">
-          <MessageSquare className="h-16 w-16 mb-4" />
-          <p className="text-xl">Select a chat to start messaging</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className={cn(
-        "flex flex-col bg-background h-full", 
-        isMobile && activeMobileView === 'chat' ? "w-full" : "w-full md:w-2/3" 
-      )}>
-        {isMobile && activeMobileView === 'chat' && (
-          <div className="w-full p-3 border-b bg-card flex items-center shrink-0 shadow-sm">
-            <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <Avatar className="h-8 w-8 mr-3 shrink-0">
-              <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
-              <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <h2 className="text-lg font-semibold truncate flex-grow">{otherParticipant?.name || "Chat"}</h2>
-          </div>
-        )}
-
-        <CardHeader className={cn(
-            "p-4 border-b bg-card flex-row items-center shrink-0",
-            (isMobile && activeMobileView === 'chat') ? "hidden" : "flex" 
-        )}>
-          <Avatar className="h-8 w-8 mr-2 shrink-0">
-            <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
-            <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <CardTitle className="text-lg truncate">
-            {otherParticipant?.name || "Chat"}
-          </CardTitle>
-        </CardHeader>
-        
-        <ScrollArea className="flex-grow h-0">
-          <div className="p-4 space-y-4">
-            {activeThread!.messages.map(msg => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
-              >
-                <div className={`flex items-end gap-2 max-w-[70%] ${msg.sender.id === mockCurrentUser.id ? "flex-row-reverse" : "flex-row"}`}>
-                  <Avatar className="h-8 w-8">
-                      <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
-                      <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
-                  </Avatar>
-                  <div
-                      className={`p-3 rounded-lg shadow ${
-                      msg.sender.id === mockCurrentUser.id
-                          ? "bg-primary text-primary-foreground rounded-br-none"
-                          : "bg-card text-card-foreground rounded-bl-none border"
-                      }`}
-                  >
-                      <p className="text-sm">{msg.text}</p>
-                      <p className={`text-xs mt-1 ${msg.sender.id === mockCurrentUser.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                      {format(parseISO(msg.timestamp), "p")}
-                      </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-        <CardFooter className="p-4 border-t bg-card shrink-0">
-          <div className="flex w-full space-x-2">
-            <Input
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-              className="flex-grow"
-            />
-            <Button onClick={handleSendMessage} disabled={!newMessage.trim()} className="bg-accent hover:bg-accent/90">
-              <Send className="h-5 w-5" />
-              <span className="sr-only">Send</span>
-            </Button>
-          </div>
-        </CardFooter>
-      </div>
-    );
-  };
+  if (isMobile === undefined) { // Still determining screen size
+    return <div className="w-full h-full flex items-center justify-center"><p>Loading...</p></div>;
+  }
 
   if (isMobile) {
     return (
-      <div className="w-full h-full flex flex-col">
-        {activeMobileView === 'list' && <SidebarView />}
-        {activeMobileView === 'chat' && activeThreadId && <ChatAreaView />}
-        {activeMobileView === 'chat' && !activeThreadId && ( 
-           <div className="flex-grow flex flex-col h-full items-center justify-center text-muted-foreground p-4">
-            <MessageSquare className="h-16 w-16 mb-4" />
-            <p className="text-xl">No chat selected.</p>
-            <Button onClick={handleBackToList} className="mt-4">Back to List</Button>
-          </div>
-        )}
-      </div>
+      <MobileChatWindowLayout
+        activeMobileView={activeMobileView}
+        activeThread={activeThread}
+        otherParticipant={otherParticipant}
+        threads={threads}
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        handleSendMessage={handleSendMessage}
+        handleThreadSelect={handleThreadSelect}
+        handleBackToList={handleBackToList}
+        getOtherParticipant={getOtherParticipant}
+        messagesEndRef={messagesEndRef}
+      />
     );
   }
 
   return (
-    <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl">
-      <SidebarView />
-      <ChatAreaView />
-    </Card>
+    <DesktopChatWindowLayout
+      activeThreadId={activeThreadId}
+      activeThread={activeThread}
+      otherParticipant={otherParticipant}
+      threads={threads}
+      newMessage={newMessage}
+      setNewMessage={setNewMessage}
+      handleSendMessage={handleSendMessage}
+      handleThreadSelect={handleThreadSelect}
+      getOtherParticipant={getOtherParticipant}
+      messagesEndRef={messagesEndRef}
+    />
   );
 }
