@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Battle, User } from "@/types";
@@ -35,12 +36,12 @@ const getModeIcon = (mode: Battle["mode"]) => {
 };
 
 const UserDisplay = ({ user }: { user: User }) => (
-  <div className="flex items-center space-x-2">
+  <div className="flex flex-col items-center space-y-1 sm:flex-row sm:space-y-0 sm:space-x-2">
     <Avatar className="h-8 w-8">
       <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="profile avatar" />
       <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
-    <span className="font-medium">{user.name}</span>
+    <span className="font-medium text-center sm:text-left">{user.name}</span>
   </div>
 );
 
@@ -77,9 +78,9 @@ export function BattleCard({ battle, currentUserId, onStatusUpdate }: BattleCard
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-around text-center">
+        <div className="flex flex-col items-center space-y-2 text-center">
           <UserDisplay user={battle.opponentA} />
-          <span className="text-muted-foreground font-bold mx-2">VS</span>
+          <span className="text-muted-foreground font-bold">VS</span>
           <UserDisplay user={battle.opponentB} />
         </div>
         <div className="text-sm text-muted-foreground">
