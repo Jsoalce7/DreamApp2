@@ -149,6 +149,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   const handleBackToList = () => {
     setActiveMobileView('list');
+    onMobileViewChange?.('list'); // Explicitly notify parent
   };
 
   const ChannelListView = () => (

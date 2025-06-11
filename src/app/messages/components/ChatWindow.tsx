@@ -110,6 +110,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   const handleBackToList = () => {
     setActiveMobileView('list');
+     onMobileViewChange?.('list'); // Explicitly notify parent
   };
 
   const SidebarView = () => (
