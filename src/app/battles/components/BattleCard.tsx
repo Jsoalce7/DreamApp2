@@ -35,24 +35,36 @@ const getModeIcon = (mode: Battle["mode"]) => {
   }
 };
 
-const UserDisplay = ({ user }: { user: User }) => (
-  <div className="flex flex-col items-center space-y-1 sm:flex-row sm:space-y-0 sm:space-x-2">
-    <Avatar className="h-8 w-8">
-      <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="profile avatar" />
-      <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-    </Avatar>
-    <span className="font-medium text-center sm:text-left">{user.name}</span>
-  </div>
-);
+const UserDisplay = ({ user }: { user?: User }) => {
+  if (!user) { // Handle case where opponentB might be undefined for open battles not yet rendered in this card
+    return (
+      <div className="flex flex-col items-center space-y-1">
+        <Avatar className="h-8 w-8">
+          <AvatarFallback>?</AvatarFallback>
+        </Avatar>
+        <span className="font-medium text-center">Waiting...</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col items-center space-y-1 sm:flex-row sm:space-y-0 sm:space-x-2">
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="profile avatar" />
+        <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+      <span className="font-medium text-center sm:text-left">{user.name}</span>
+    </div>
+  );
+};
 
 export function BattleCard({ battle, currentUserId, onStatusUpdate }: BattleCardProps) {
-  const canTakeAction = battle.status === "Pending" && battle.requestedToUserId === currentUserId;
+  const canTakeAction = battle.status === "Pending" && battle.requestedToUserId === currentUserId && battle.battleType !== 'open';
   
   let formattedDateTime = "Date TBD";
   try {
     if (battle.dateTime) {
       const date = parseISO(battle.dateTime);
-      formattedDateTime = format(date, "PPpp 'UTC'"); // e.g., Jun 20, 2024, 2:30:00 PM UTC
+      formattedDateTime = format(date, "PPpp 'UTC'"); 
     }
   } catch (error) {
     console.error("Error parsing date:", battle.dateTime, error);
@@ -73,11 +85,11 @@ export function BattleCard({ battle, currentUserId, onStatusUpdate }: BattleCard
             battle.status === "Pending" || battle.status === "Requested" ? "secondary" :
             battle.status === "Declined" ? "destructive" : "outline"
           }>
-            {battle.status}
+            {battle.status} {battle.battleType === 'open' && battle.status === 'Pending' && '(Open)'}
           </Badge>
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 flex-grow"> {/* Added flex-grow */}
+      <CardContent className="space-y-4 flex-grow">
         <div className="flex flex-col items-center space-y-2 text-center">
           <UserDisplay user={battle.opponentA} />
           <span className="text-muted-foreground font-bold">VS</span>
@@ -98,7 +110,7 @@ export function BattleCard({ battle, currentUserId, onStatusUpdate }: BattleCard
           </Button>
         </CardFooter>
       )}
-       {battle.status === "Requested" && battle.requestedByUserId === currentUserId && (
+       {battle.status === "Requested" && battle.requestedByUserId === currentUserId && battle.battleType !== 'open' && (
         <CardFooter className="pt-4">
             <p className="text-sm text-muted-foreground w-full text-center">Awaiting opponent's response.</p>
         </CardFooter>

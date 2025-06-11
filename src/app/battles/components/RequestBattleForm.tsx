@@ -12,17 +12,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BattleMode } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarIcon, Send } from "lucide-react";
+import { CalendarIcon, Send, ListChecks } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
+import { OpenBattlesDialog } from "./OpenBattlesDialog"; // Import the new dialog
 
 const battleRequestSchema = z.object({
-  opponentName: z.string().min(3, "Opponent name must be at least 3 characters"),
+  battleType: z.enum(["direct", "open"], { required_error: "Please select a battle type."}),
+  opponentName: z.string().optional(),
   dateTime: z.date({ required_error: "Please select a date and time." }),
   mode: z.enum(["1v1 Duel", "Team Clash", "Fun Mode"], { required_error: "Please select a battle mode." }),
+}).refine(data => {
+  if (data.battleType === 'direct') {
+    return !!data.opponentName && data.opponentName.length >= 3;
+  }
+  return true;
+}, {
+  message: "Opponent name must be at least 3 characters for a direct battle.",
+  path: ["opponentName"], 
 });
 
 type BattleRequestFormData = z.infer<typeof battleRequestSchema>;
@@ -33,22 +42,52 @@ const mockOpponents = [
   { id: "user2", name: "GamerPro", diamonds: 250 },
   { id: "user3", name: "CreativeCat", diamonds: 50 },
   { id: "user4", name: "ArtisticAnt", diamonds: 300 },
-];
+  { id: "currentUser", name: "You", diamonds: 750 }, // Ensure current user isn't listed as opponent for direct
+].filter(op => op.id !== "currentUser");
 
 
 export function RequestBattleForm() {
   const { toast } = useToast();
-  const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } = useForm<BattleRequestFormData>({
+  const [selectedBattleType, setSelectedBattleType] = useState<"direct" | "open" | undefined>(undefined);
+
+  const { register, handleSubmit, control, setValue, watch, formState: { errors, isSubmitting } } = useForm<BattleRequestFormData>({
     resolver: zodResolver(battleRequestSchema),
+    defaultValues: {
+      battleType: "direct", // Default to direct
+    }
   });
 
+  // Watch the battleType field to react to its changes
+  const battleType = watch("battleType");
+
+  React.useEffect(() => {
+    setSelectedBattleType(battleType);
+    if (battleType === "open") {
+      setValue("opponentName", undefined); // Clear opponent name if switching to open
+    }
+  }, [battleType, setValue]);
+
+
   const onSubmit: SubmitHandler<BattleRequestFormData> = async (data) => {
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Battle Request Data:", data);
+    
+    let toastDescription = "";
+    if (data.battleType === 'direct') {
+      toastDescription = `Your direct challenge to ${data.opponentName} for a ${data.mode} on ${format(data.dateTime, "PPpp")} has been sent.`;
+      // TODO: Add to a list that BattleRequestInbox can see if requestedToUserId matches.
+      // For now, this will behave as before for direct requests.
+      console.log("Direct Battle Request Data:", data);
+    } else { // Open Battle
+      toastDescription = `Your open challenge for a ${data.mode} on ${format(data.dateTime, "PPpp")} has been created.`;
+      // TODO: Add this to a global list of open battles.
+      // For demonstration, we'll just log it.
+      console.log("Open Battle Request Data:", data, " (Created by: currentUser)");
+      // In a real app, this would be saved to Firestore with battleType: "open", status: "pending", opponentA: currentUser
+    }
+
     toast({
       title: "Battle Request Sent!",
-      description: `Your request to ${data.opponentName} for a ${data.mode} on ${format(data.dateTime, "PPpp")} has been sent.`,
+      description: toastDescription,
       variant: "default",
     });
     // Reset form or redirect user
@@ -57,27 +96,50 @@ export function RequestBattleForm() {
   return (
     <Card className="w-full max-w-lg mx-auto shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl font-headline text-primary">Challenge an Opponent</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-2xl font-headline text-primary">Challenge an Opponent</CardTitle>
+          <OpenBattlesDialog /> 
+        </div>
         <CardDescription>Fill out the details below to send a battle request.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <Label htmlFor="opponentName" className="font-medium">Opponent Name</Label>
-             <Select 
-              onValueChange={(value) => setValue("opponentName", value)}
+            <Label htmlFor="battleType" className="font-medium">Battle Type</Label>
+            <Select
+              defaultValue="direct"
+              onValueChange={(value: "direct" | "open") => setValue("battleType", value, { shouldValidate: true })}
             >
-              <SelectTrigger id="opponentName">
-                <SelectValue placeholder="Select an opponent" />
+              <SelectTrigger id="battleType">
+                <SelectValue placeholder="Select battle type" />
               </SelectTrigger>
               <SelectContent>
-                {mockOpponents.map(op => (
-                  <SelectItem key={op.id} value={op.name}>{op.name}</SelectItem>
-                ))}
+                <SelectItem value="direct">Direct Battle (Challenge a specific user)</SelectItem>
+                <SelectItem value="open">Open Battle (Public challenge)</SelectItem>
               </SelectContent>
             </Select>
-            {errors.opponentName && <p className="text-sm text-destructive mt-1">{errors.opponentName.message}</p>}
+            {errors.battleType && <p className="text-sm text-destructive mt-1">{errors.battleType.message}</p>}
           </div>
+
+          {selectedBattleType === "direct" && (
+            <div>
+              <Label htmlFor="opponentName" className="font-medium">Opponent Name</Label>
+              <Select 
+                onValueChange={(value) => setValue("opponentName", value, { shouldValidate: true })}
+                value={control._formValues.opponentName}
+              >
+                <SelectTrigger id="opponentName">
+                  <SelectValue placeholder="Select an opponent" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockOpponents.map(op => (
+                    <SelectItem key={op.id} value={op.name}>{op.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.opponentName && <p className="text-sm text-destructive mt-1">{errors.opponentName.message}</p>}
+            </div>
+          )}
 
           <div>
             <Label htmlFor="dateTime" className="font-medium">Date & Time</Label>
@@ -100,6 +162,7 @@ export function RequestBattleForm() {
                   selected={control._formValues.dateTime}
                   onSelect={(date) => setValue("dateTime", date as Date, { shouldValidate: true })}
                   initialFocus
+                  disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))} // Disable past dates
                 />
                 <div className="p-3 border-t border-border">
                   <Label htmlFor="time" className="text-sm">Time (HH:mm)</Label>
@@ -111,8 +174,8 @@ export function RequestBattleForm() {
                       const time = e.target.value;
                       const [hours, minutes] = time.split(':').map(Number);
                       const currentSelectedDate = control._formValues.dateTime || new Date();
-                      const newDateTime = new Date(currentSelectedDate);
-                      newDateTime.setHours(hours, minutes);
+                      // Ensure date part is not altered, only time
+                      const newDateTime = new Date(currentSelectedDate.getFullYear(), currentSelectedDate.getMonth(), currentSelectedDate.getDate(), hours, minutes);
                       setValue("dateTime", newDateTime, { shouldValidate: true });
                     }}
                   />
@@ -125,7 +188,8 @@ export function RequestBattleForm() {
           <div>
             <Label htmlFor="mode" className="font-medium">Battle Mode</Label>
             <Select 
-              onValueChange={(value: BattleMode) => setValue("mode", value)}
+              onValueChange={(value: BattleMode) => setValue("mode", value, {shouldValidate: true})}
+              value={control._formValues.mode}
             >
               <SelectTrigger id="mode">
                 <SelectValue placeholder="Select battle mode" />
