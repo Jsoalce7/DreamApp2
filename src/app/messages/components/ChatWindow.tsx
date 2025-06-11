@@ -177,7 +177,7 @@ function MobileChatWindowLayout({
   }
 
   return (
-    <div className="flex flex-col w-full h-full bg-background">
+    <div className="flex flex-col w-full fixed left-0 right-0 top-[56px] bottom-0 bg-background">
       <div className="flex items-center p-3 border-b bg-card shrink-0 shadow-sm">
         <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
           <ArrowLeft className="h-5 w-5" />
@@ -402,7 +402,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
 
   if (isMobile) {
     return (
-      <div className="w-full h-full flex flex-col">
+      <div className="w-full h-screen flex flex-col">
         <MobileChatWindowLayout
           activeMobileView={activeMobileView}
           activeThread={activeThread}

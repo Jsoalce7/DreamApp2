@@ -308,7 +308,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   if (isMobile) {
     return (
-       <div className="w-full h-full flex flex-col">
+       <div className="w-full fixed inset-0 top-[56px] flex flex-col bg-background">
         {activeMobileView === 'list' && <ChannelListView />}
         {activeMobileView === 'chat' && activeChannelId && <ChannelChatView />}
          {activeMobileView === 'chat' && !activeChannelId && ( 
