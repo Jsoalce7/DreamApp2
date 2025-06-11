@@ -22,7 +22,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription as BattleCardDescription } from "@/components/ui/card";
@@ -30,7 +29,9 @@ import type { Battle, User } from "@/types";
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock3, Swords, Users2, Sparkles, ListChecks, CheckCircle, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock3, Swords, Users2, Sparkles, ListChecks, CheckCircle, AlertTriangle, Search, ListFilter } from "lucide-react";
 
 // Mock current user - in a real app, this would come from auth context
 const currentUserId = "currentUser";
@@ -66,6 +67,24 @@ const initialMockOpenBattles: Battle[] = [
     battleType: "open",
     requestedByUserId: "user5",
   },
+  {
+    id: "open4",
+    opponentA: { id: "user1", name: "ValiantVictor", avatarUrl: "https://placehold.co/40x40.png?text=VV", diamonds: 120 },
+    dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    mode: "Team Clash",
+    status: "Pending", 
+    battleType: "open",
+    requestedByUserId: "user1", 
+  },
+  {
+    id: "open5",
+    opponentA: { id: "user5", name: "FunkyFred", avatarUrl: "https://placehold.co/40x40.png?text=FF", diamonds: 500 },
+    dateTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+    mode: "1v1 Duel",
+    status: "Pending",
+    battleType: "open",
+    requestedByUserId: "user5",
+  },
 ];
 
 
@@ -84,6 +103,8 @@ export function OpenBattlesDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedBattleForConfirmation, setSelectedBattleForConfirmation] = useState<Battle | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterMode, setFilterMode] = useState<string>("all");
 
 
   const handleAcceptButtonClick = (battle: Battle) => {
@@ -110,11 +131,15 @@ export function OpenBattlesDialog() {
       description: `You have accepted the ${battleToAccept.mode} challenge from ${battleToAccept.opponentA.name}.`,
     });
     
-    setIsConfirmDialogOpen(false); // Close confirmation dialog
-    setSelectedBattleForConfirmation(null); // Reset selected battle
-    // Potentially close the main dialog or refresh list if needed
-    // setIsOpen(false); 
+    setIsConfirmDialogOpen(false); 
+    setSelectedBattleForConfirmation(null); 
   };
+
+  const filteredOpenBattles = openBattles
+    .filter(battle =>
+      battle.opponentA.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(battle => filterMode === "all" || battle.mode === filterMode);
 
   return (
     <>
@@ -131,10 +156,35 @@ export function OpenBattlesDialog() {
               Browse public battle challenges and accept one to join.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="flex flex-col md:flex-row gap-2 py-2 border-y my-2">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by challenger..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 h-9"
+              />
+            </div>
+            <Select value={filterMode} onValueChange={setFilterMode}>
+              <SelectTrigger className="w-full md:w-[200px] h-9">
+                <ListFilter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Modes</SelectItem>
+                <SelectItem value="1v1 Duel">1v1 Duel</SelectItem>
+                <SelectItem value="Team Clash">Team Clash</SelectItem>
+                <SelectItem value="Fun Mode">Fun Mode</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <ScrollArea className="flex-grow pr-6 -mr-6">
-            {openBattles.length > 0 ? (
+            {filteredOpenBattles.length > 0 ? (
               <div className="space-y-4 py-4">
-                {openBattles.map((battle) => (
+                {filteredOpenBattles.map((battle) => (
                   <Card key={battle.id} className="shadow-md hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -178,8 +228,10 @@ export function OpenBattlesDialog() {
             ) : (
               <div className="flex flex-col items-center justify-center h-full py-10 text-center">
                 <ListChecks className="h-16 w-16 text-muted-foreground mb-4" />
-                <p className="text-xl text-muted-foreground">No Open Battles Available</p>
-                <p className="text-sm text-muted-foreground mt-1">Check back later or create your own open challenge!</p>
+                <p className="text-xl text-muted-foreground">No Open Battles Found</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {searchTerm || filterMode !== "all" ? "Try adjusting your filters or " : "Check back later or "} create your own open challenge!
+                </p>
               </div>
             )}
           </ScrollArea>
