@@ -4,18 +4,18 @@
 import { useState, useEffect } from "react";
 import { ChatWindow } from "./components/ChatWindow";
 import { CommunityChat } from "./components/CommunityChat";
-import { Button } from "@/components/ui/button"; // Import Button
+import { Button } from "@/components/ui/button";
 import { MessageCircle, Users } from "lucide-react";
-import { MessageBottomNav } from "./components/MessageBottomNav"; 
-import { useIsMobile } from '@/hooks/use-mobile'; // Corrected import path
+import { MessageBottomNav } from "./components/MessageBottomNav";
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from "@/lib/utils";
 
 type MessageTabValue = "direct-messages" | "community-chat";
 type MobileChatView = "list" | "chat";
 
 const messageTabItems: { value: MessageTabValue; label: string; icon: React.ElementType; fullLabel: string; }[] = [
-  { value: "direct-messages", label: "Direct", icon: MessageCircle, fullLabel: "Direct Messages" }, 
-  { value: "community-chat", label: "Community", icon: Users, fullLabel: "Community Chat" }, 
+  { value: "direct-messages", label: "Direct", icon: MessageCircle, fullLabel: "Direct Messages" },
+  { value: "community-chat", label: "Community", icon: Users, fullLabel: "Community Chat" },
 ];
 
 export default function MessagesPage() {
@@ -28,9 +28,8 @@ export default function MessagesPage() {
       setIsMobileChatFullscreen(view === 'chat');
     }
   };
-  
+
   useEffect(() => {
-    // If not mobile, ensure fullscreen state is reset
     if (!isMobile) {
       setIsMobileChatFullscreen(false);
     }
@@ -38,8 +37,8 @@ export default function MessagesPage() {
 
 
   return (
-    <div className="flex flex-col h-full"> {/* Root of MessagesPage, h-full from AppShell's main */}
-      <header className="mb-1 lg:mb-2 shrink-0"> {/* Adjusted margin */}
+    <div className="flex flex-col flex-grow"> {/* Changed h-full to flex-grow */}
+      <header className="mb-1 lg:mb-2 shrink-0">
         {/* Empty header as per previous requests, keeping for structure consistency */}
       </header>
 
