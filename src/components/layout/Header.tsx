@@ -16,10 +16,10 @@ export function Header() {
   return (
     <header className="bg-card border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16"> {/* Container for padding and max-width */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center h-full">
+        <div className="flex items-center justify-between h-full">
 
-          {/* Left Column (Hamburger on mobile) */}
-          <div className="flex justify-start items-center">
+          {/* Left Section: Hamburger (Mobile) + Logo/Title (All Screens) */}
+          <div className="flex items-center gap-2">
             <div className="md:hidden"> {/* Hamburger Menu for mobile */}
               <Sheet>
                 <SheetTrigger asChild>
@@ -40,27 +40,25 @@ export function Header() {
                 </SheetContent>
               </Sheet>
             </div>
-             {/* Optional: Add a placeholder div here for desktop if needed for specific visual balancing, e.g., <div className="hidden md:block w-10"></div> */}
-          </div>
-
-          {/* Center Column (Logo and Title) */}
-          <div className="flex justify-center items-center">
+            {/* Logo and Title */}
             <Link href="/" className="flex items-center gap-2">
               <Logo />
               <span className="font-headline font-semibold text-xl text-primary">ClashSync Lite</span>
             </Link>
           </div>
 
-          {/* Right Column (Desktop Navigation and Avatar) */}
-          <div className="flex justify-end items-center gap-2">
-            <nav className="hidden md:flex items-center space-x-2"> {/* Desktop navigation items */}
-              {navItems.map((item) => (
-                <Button key={item.href} variant="ghost" asChild>
-                  <Link href={item.href}>{item.label}</Link>
-                </Button>
-              ))}
-            </nav>
-            <Avatar> {/* User avatar */}
+          {/* Center Section: Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-2">
+            {navItems.map((item) => (
+              <Button key={item.href} variant="ghost" asChild>
+                <Link href={item.href}>{item.label}</Link>
+              </Button>
+            ))}
+          </nav>
+
+          {/* Right Section: User Avatar */}
+          <div className="flex items-center">
+            <Avatar>
               <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="profile avatar" />
               <AvatarFallback>CS</AvatarFallback>
             </Avatar>
