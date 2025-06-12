@@ -13,7 +13,6 @@ import { Send, MessageSquare, Search, ArrowLeft } from "lucide-react";
 import { format, parseISO } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from "@/lib/utils";
-import { useUserProfilePopup } from '@/contexts/UserProfilePopupContext';
 
 const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750, battleStyle: "Comedy Roasts"};
 
@@ -55,10 +54,9 @@ interface ChatMessagesProps {
   messages: Message[];
   currentUserId: string;
   messagesEndRef: React.RefObject<HTMLDivElement>;
-  openProfilePopup: (user: User) => void;
 }
 
-function ChatMessages({ messages, currentUserId, messagesEndRef, openProfilePopup }: ChatMessagesProps) {
+function ChatMessages({ messages, currentUserId, messagesEndRef }: ChatMessagesProps) {
   return (
     <>
       {messages.map(msg => (
@@ -68,11 +66,7 @@ function ChatMessages({ messages, currentUserId, messagesEndRef, openProfilePopu
         >
           <div className={`flex items-end gap-2 max-w-[70%] ${msg.sender.id === currentUserId ? "flex-row-reverse" : "flex-row"}`}>
             <Avatar 
-              className="h-8 w-8 cursor-pointer"
-              onClick={() => openProfilePopup(msg.sender)}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(msg.sender)}
-              role="button"
-              tabIndex={0}
+              className="h-8 w-8"
             >
                 <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
                 <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
@@ -109,7 +103,6 @@ interface MobileChatWindowLayoutProps {
   handleBackToList: () => void;
   getOtherParticipant: (thread: DirectMessageThread) => User | undefined;
   messagesEndRef: React.RefObject<HTMLDivElement>;
-  openProfilePopup: (user: User) => void;
 }
 
 function MobileChatWindowLayout({
@@ -124,7 +117,6 @@ function MobileChatWindowLayout({
   handleBackToList,
   getOtherParticipant,
   messagesEndRef,
-  openProfilePopup,
 }: MobileChatWindowLayoutProps) {
   
   useEffect(() => {
@@ -152,22 +144,14 @@ function MobileChatWindowLayout({
                 onClick={() => handleThreadSelect(thread.id)}
               >
                 <Avatar 
-                  className="h-10 w-10 mr-3 cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); openProfilePopup(otherUser); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openProfilePopup(otherUser); }}}
-                  role="button"
-                  tabIndex={0}
+                  className="h-10 w-10 mr-3"
                 >
                   <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="profile avatar"/>
                   <AvatarFallback>{otherUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow text-left">
                   <p 
-                    className="font-semibold cursor-pointer hover:underline"
-                    onClick={(e) => { e.stopPropagation(); openProfilePopup(otherUser); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openProfilePopup(otherUser); }}}
-                    role="button"
-                    tabIndex={0}
+                    className="font-semibold"
                   >{otherUser.name}</p>
                   <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[200px]">
                     {thread.lastMessage?.text || "No messages yet"}
@@ -203,26 +187,18 @@ function MobileChatWindowLayout({
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <Avatar 
-            className="h-8 w-8 mr-3 shrink-0 cursor-pointer"
-            onClick={() => openProfilePopup(otherParticipant)}
-            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(otherParticipant)}
-            role="button"
-            tabIndex={0}
+            className="h-8 w-8 mr-3 shrink-0"
         >
           <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
           <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         <h2 
-            className="text-lg font-semibold truncate flex-grow cursor-pointer hover:underline"
-            onClick={() => openProfilePopup(otherParticipant)}
-            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(otherParticipant)}
-            role="button"
-            tabIndex={0}
+            className="text-lg font-semibold truncate flex-grow"
         >{otherParticipant?.name || "Chat"}</h2>
       </div>
 
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
-         <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} openProfilePopup={openProfilePopup} />
+         <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} />
       </div>
 
       <div className="p-4 border-t bg-card shrink-0">
@@ -255,7 +231,6 @@ interface DesktopChatWindowLayoutProps {
   handleThreadSelect: (threadId: string) => void;
   getOtherParticipant: (thread: DirectMessageThread) => User | undefined;
   messagesEndRef: React.RefObject<HTMLDivElement>;
-  openProfilePopup: (user: User) => void;
 }
 
 function DesktopChatWindowLayout({
@@ -269,7 +244,6 @@ function DesktopChatWindowLayout({
   handleThreadSelect,
   getOtherParticipant,
   messagesEndRef,
-  openProfilePopup,
 }: DesktopChatWindowLayoutProps) {
 
   useEffect(() => {
@@ -297,22 +271,14 @@ function DesktopChatWindowLayout({
                 onClick={() => handleThreadSelect(thread.id)}
               >
                 <Avatar 
-                  className="h-10 w-10 mr-3 cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); openProfilePopup(otherUser); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openProfilePopup(otherUser); }}}
-                  role="button"
-                  tabIndex={0}
+                  className="h-10 w-10 mr-3"
                 >
                   <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="profile avatar"/>
                   <AvatarFallback>{otherUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow text-left">
                   <p 
-                    className="font-semibold cursor-pointer hover:underline"
-                    onClick={(e) => { e.stopPropagation(); openProfilePopup(otherUser); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openProfilePopup(otherUser); }}}
-                    role="button"
-                    tabIndex={0}
+                    className="font-semibold"
                   >{otherUser.name}</p>
                   <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[200px]">
                     {thread.lastMessage?.text || "No messages yet"}
@@ -339,28 +305,20 @@ function DesktopChatWindowLayout({
           <>
             <CardHeader className="p-4 border-b bg-card flex-row items-center shrink-0">
               <Avatar 
-                className="h-8 w-8 mr-2 shrink-0 cursor-pointer"
-                onClick={() => openProfilePopup(otherParticipant)}
-                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(otherParticipant)}
-                role="button"
-                tabIndex={0}
+                className="h-8 w-8 mr-2 shrink-0"
               >
                 <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
                 <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <CardTitle 
-                className="text-lg truncate cursor-pointer hover:underline"
-                onClick={() => openProfilePopup(otherParticipant)}
-                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(otherParticipant)}
-                role="button"
-                tabIndex={0}
+                className="text-lg truncate"
               >
                 {otherParticipant?.name || "Chat"}
               </CardTitle>
             </CardHeader>
             
             <div className="flex-grow h-0 overflow-y-auto p-4 space-y-4">
-              <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} openProfilePopup={openProfilePopup}/>
+              <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} />
             </div>
 
             <CardFooter className="p-4 border-t bg-card shrink-0">
@@ -392,7 +350,6 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const [activeMobileView, setActiveMobileView] = useState<MobileChatView>('list');
-  const { openPopup } = useUserProfilePopup();
 
   const getOtherParticipant = (thread: DirectMessageThread): User | undefined => {
     return thread.participants.find(p => p.id !== mockCurrentUser.id);
@@ -472,7 +429,6 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
           handleBackToList={handleBackToList}
           getOtherParticipant={getOtherParticipant}
           messagesEndRef={messagesEndRef}
-          openProfilePopup={openPopup}
         />
       </div>
     );
@@ -490,7 +446,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
       handleThreadSelect={handleThreadSelect}
       getOtherParticipant={getOtherParticipant}
       messagesEndRef={messagesEndRef}
-      openProfilePopup={openPopup}
     />
   );
 }
+
