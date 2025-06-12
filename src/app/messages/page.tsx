@@ -7,11 +7,11 @@ import { CommunityChat } from "./components/CommunityChat";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Users } from "lucide-react";
 import { MessageBottomNav } from "./components/MessageBottomNav";
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile'; // Corrected import path
 import { cn } from "@/lib/utils";
 
 type MessageTabValue = "direct-messages" | "community-chat";
-type MobileChatView = "list" | "chat";
+type MobileChatView = "list" | "chat"; // "list" for thread/channel list, "chat" for active chat view
 
 const messageTabItems: { value: MessageTabValue; label: string; icon: React.ElementType; fullLabel: string; }[] = [
   { value: "direct-messages", label: "Direct", icon: MessageCircle, fullLabel: "Direct Messages" },
@@ -20,15 +20,18 @@ const messageTabItems: { value: MessageTabValue; label: string; icon: React.Elem
 
 export default function MessagesPage() {
   const [activeTab, setActiveTab] = useState<MessageTabValue>("direct-messages");
+  // This state will track if a mobile chat view (DM or Community) is in "fullscreen" (individual chat active)
   const [isMobileChatFullscreen, setIsMobileChatFullscreen] = useState(false);
   const isMobile = useIsMobile();
 
+  // Callback for ChatWindow and CommunityChat to inform MessagesPage if their mobile view is "chat" or "list"
   const handleMobileViewChange = (view: MobileChatView) => {
     if (isMobile) {
       setIsMobileChatFullscreen(view === 'chat');
     }
   };
 
+  // Reset fullscreen state if switching to desktop
   useEffect(() => {
     if (!isMobile) {
       setIsMobileChatFullscreen(false);
@@ -37,13 +40,14 @@ export default function MessagesPage() {
 
 
   return (
-    <div className="flex flex-col flex-grow"> {/* Changed h-full to flex-grow */}
+    <div className="flex flex-col flex-grow"> {/* Root container for MessagesPage, takes available height */}
       <header className="mb-1 lg:mb-2 shrink-0">
-        {/* Empty header as per previous requests, keeping for structure consistency */}
+        {/* Header content can be added here if needed, currently placeholder */}
+        {/* For example, page title for desktop, hidden on mobile if using bottom nav */}
       </header>
 
-      {/* Main content area: takes up remaining space */}
-      <div className="flex-grow flex flex-row min-h-0"> {/* min-h-0 for flex children with overflow */}
+      {/* Main content area: takes up remaining space, lays out sidebar and chat side-by-side */}
+      <div className="flex-grow flex flex-row min-h-0"> {/* min-h-0 is important for flex children with overflow */}
 
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex lg:flex-col w-60 bg-card border-r p-3 space-y-1.5 shrink-0">
@@ -70,7 +74,9 @@ export default function MessagesPage() {
         </aside>
 
         {/* Chat Content Area (for both desktop and mobile inside this div) */}
-        <div className="flex-grow h-full w-full lg:w-auto">
+        {/* On desktop, this div takes remaining width. On mobile, it takes full width as sidebar is hidden. */}
+        {/* Removing h-full here to let it stretch, ChatWindow/CommunityChat will use h-full internally */}
+        <div className="flex-grow w-full lg:w-auto">
           {/* ChatWindow and CommunityChat are designed to take h-full/w-full of their container */}
           {/* They also handle their own mobile fullscreen logic which overlays everything *except* the App Header */}
           {activeTab === "direct-messages" && <ChatWindow onMobileViewChange={handleMobileViewChange} />}
@@ -81,6 +87,7 @@ export default function MessagesPage() {
 
       {/* Mobile/Tablet Bottom Navigation */}
       {/* This is rendered conditionally and positioned by its own CSS (fixed bottom) */}
+      {/* It should only be visible if not in a fullscreen mobile chat view */}
       {isMobile && !isMobileChatFullscreen && (
          <MessageBottomNav activeTab={activeTab} setActiveTab={setActiveTab} navItems={messageTabItems} />
       )}
