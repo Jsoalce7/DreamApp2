@@ -15,9 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from "@/lib/utils";
+import { useUserProfilePopup } from '@/contexts/UserProfilePopupContext';
 
-const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 };
-const mockOtherUser: User = { id: "otherUser", name: "ModeratorBot", avatarUrl: "https://placehold.co/40x40.png?text=MB", diamonds: 0 };
+const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750, battleStyle: "Comedy Roasts"};
+const mockOtherUser: User = { id: "otherUser", name: "ModeratorBot", avatarUrl: "https://placehold.co/40x40.png?text=MB", diamonds: 0, battleStyle: "Moderation" }; // Added battleStyle
 
 const initialChannels: CommunityChannel[] = [
   {
@@ -51,6 +52,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [activeMobileView, setActiveMobileView] = useState<MobileChatView>('list');
+  const { openPopup } = useUserProfilePopup();
 
   const activeChannel = channels.find(c => c.id === activeChannelId);
 
@@ -67,7 +69,6 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
       onMobileViewChange?.(activeChannelId ? 'chat' : 'list'); 
     }
   }, [isMobile, activeChannelId, onMobileViewChange]);
-
 
   useEffect(() => {
     if (activeMobileView === 'chat' || !isMobile) {
@@ -239,14 +240,20 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow h-0">
-          <div className="p-4 space-y-4"> {/* Padding applied to inner content */}
+          <div className="p-4 space-y-4">
             {activeChannel!.messages.map(msg => (
               <div
                 key={msg.id}
                 className={`flex ${msg.sender.id === mockCurrentUser.id ? "justify-end" : "justify-start"}`}
               >
                 <div className={`flex items-start gap-2 max-w-[80%] ${msg.sender.id === mockCurrentUser.id ? "flex-row-reverse" : "flex-row"}`}>
-                    <Avatar className="h-8 w-8 shrink-0 mt-1">
+                    <Avatar 
+                      className="h-8 w-8 shrink-0 mt-1 cursor-pointer"
+                      onClick={() => openPopup(msg.sender)}
+                      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openPopup(msg.sender)}
+                      role="button"
+                      tabIndex={0}
+                    >
                       <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
                       <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
                   </Avatar>
@@ -258,7 +265,13 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
                       }`}
                   >
                       <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-semibold">{msg.sender.name}</span>
+                          <span 
+                            className="text-xs font-semibold cursor-pointer hover:underline"
+                            onClick={() => openPopup(msg.sender)}
+                            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openPopup(msg.sender)}
+                            role="button"
+                            tabIndex={0}
+                          >{msg.sender.name}</span>
                             {msg.isFlagged !== undefined && (
                               <Badge variant={msg.isFlagged ? "destructive" : "default"} className="ml-2 text-xs px-1.5 py-0.5">
                               {msg.isFlagged ? <ShieldAlert className="h-3 w-3 mr-1" /> : <ShieldCheck className="h-3 w-3 mr-1" />}
@@ -305,7 +318,6 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     );
   };
 
-
   if (isMobile) {
     return (
        <div className="w-full h-full flex flex-col bg-background">
@@ -329,4 +341,3 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
     </Card>
   );
 }
-

@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,37 +17,31 @@ import { useRouter } from "next/navigation";
 
 interface UserProfilePopupProps {
   user: User;
-  trigger: React.ReactNode; // The element that triggers the dialog
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function UserProfilePopup({ user, trigger }: UserProfilePopupProps) {
+export function UserProfilePopup({ user, isOpen, onOpenChange }: UserProfilePopupProps) {
   const router = useRouter();
 
-  // In a real app, if only userId was passed, you'd fetch user details here:
-  // const [userDetails, setUserDetails] = useState<User | null>(null);
-  // useEffect(() => {
-  //   if (user && user.id && !user.name) { 
-  //     // fetchUserFromFirestore(user.id).then(setUserDetails);
-  //   } else {
-  //     setUserDetails(user);
-  //   }
-  // }, [user]);
-  // if (!userDetails) return <>{trigger}</>; 
-
   const handleChallenge = () => {
-    console.log(`Challenge user: ${user.name}`);
     router.push(`/battles?tab=request-battle&opponentId=${user.id}&opponentName=${encodeURIComponent(user.name)}`);
+    onOpenChange(false); // Close popup on action
   };
 
   const handleSendMessage = () => {
-    console.log(`Send message to user: ${user.name}`);
     router.push(`/messages?dmWith=${user.id}`);
+    onOpenChange(false); // Close popup on action
   };
 
+  // User prop is guaranteed by the context provider when isOpen is true.
+  // However, as a direct component, it's good practice to handle if user is somehow null/undefined.
+  if (!user) {
+    return null; 
+  }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="items-center text-center space-y-3 pt-4">
           <Avatar className="w-24 h-24 border-4 border-primary shadow-lg">

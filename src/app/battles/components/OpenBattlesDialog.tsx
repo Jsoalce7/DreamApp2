@@ -32,11 +32,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Clock3, Swords, Users2, Sparkles, ListChecks, CheckCircle, AlertTriangle, Search, ListFilter } from "lucide-react";
-import { UserProfilePopup } from "@/components/shared/UserProfilePopup";
+import { useUserProfilePopup } from '@/contexts/UserProfilePopupContext';
 
 const currentUserId = "currentUser";
 const mockCurrentUser: User = { id: "currentUser", name: "MeTheChallenger", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750, battleStyle: "Live Coding" };
-
 
 const initialMockOpenBattles: Battle[] = [
   {
@@ -68,24 +67,23 @@ const initialMockOpenBattles: Battle[] = [
   },
   {
     id: "open4",
-    opponentA: { id: "user1", name: "ValiantVictor", avatarUrl: "https://placehold.co/40x40.png?text=VV", diamonds: 120, battleStyle: "Retro Gaming" },
+    opponentA: { id: "user1_alt", name: "ValiantVictor", avatarUrl: "https://placehold.co/40x40.png?text=VV", diamonds: 120, battleStyle: "Retro Gaming" }, // Ensure unique id for map keys if names can repeat
     dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "Team Clash",
     status: "Pending", 
     battleType: "open",
-    requestedByUserId: "user1", 
+    requestedByUserId: "user1_alt", 
   },
   {
     id: "open5",
-    opponentA: { id: "user5", name: "FunkyFred", avatarUrl: "https://placehold.co/40x40.png?text=FF", diamonds: 500, battleStyle: "Dance Battles" },
+    opponentA: { id: "user5_alt", name: "FunkyFred", avatarUrl: "https://placehold.co/40x40.png?text=FF", diamonds: 500, battleStyle: "Dance Battles" }, // Ensure unique id for map keys
     dateTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Pending",
     battleType: "open",
-    requestedByUserId: "user5",
+    requestedByUserId: "user5_alt",
   },
 ];
-
 
 const getModeIcon = (mode: Battle["mode"]) => {
   switch (mode) {
@@ -98,13 +96,13 @@ const getModeIcon = (mode: Battle["mode"]) => {
 
 export function OpenBattlesDialog() {
   const { toast } = useToast();
+  const { openPopup } = useUserProfilePopup();
   const [openBattles, setOpenBattles] = useState<Battle[]>(initialMockOpenBattles);
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedBattleForConfirmation, setSelectedBattleForConfirmation] = useState<Battle | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterMode, setFilterMode] = useState<string>("all");
-
 
   const handleAcceptButtonClick = (battle: Battle) => {
     setSelectedBattleForConfirmation(battle);
@@ -115,7 +113,6 @@ export function OpenBattlesDialog() {
     if (!selectedBattleForConfirmation) return;
 
     const battleToAccept = selectedBattleForConfirmation;
-
     setOpenBattles(prev => prev.filter(b => b.id !== battleToAccept.id));
     
     console.log(`Battle ${battleToAccept.id} accepted by ${mockCurrentUser.name}. Details:`, {
@@ -139,6 +136,12 @@ export function OpenBattlesDialog() {
       battle.opponentA.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .filter(battle => filterMode === "all" || battle.mode === filterMode);
+
+  const handleChallengerClick = (challenger: User) => {
+    if (challenger.id !== currentUserId) {
+      openPopup(challenger);
+    }
+  };
 
   return (
     <>
@@ -194,17 +197,24 @@ export function OpenBattlesDialog() {
                           </CardTitle>
                           <BattleCardDescription>
                             Challenger: 
-                            <UserProfilePopup
-                              user={battle.opponentA}
-                              trigger={
-                                <span className="font-medium ml-1 cursor-pointer hover:underline">
-                                  {battle.opponentA.name}
-                                </span>
-                              }
-                            />
+                            <span 
+                              className="font-medium ml-1 cursor-pointer hover:underline"
+                              onClick={() => handleChallengerClick(battle.opponentA)}
+                              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleChallengerClick(battle.opponentA)}
+                              role="button"
+                              tabIndex={0}
+                            >
+                              {battle.opponentA.name}
+                            </span>
                           </BattleCardDescription>
                         </div>
-                         <Avatar className="h-10 w-10">
+                         <Avatar 
+                            className="h-10 w-10 cursor-pointer"
+                            onClick={() => handleChallengerClick(battle.opponentA)}
+                            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleChallengerClick(battle.opponentA)}
+                            role="button"
+                            tabIndex={0}
+                          >
                             <AvatarImage src={battle.opponentA.avatarUrl} alt={battle.opponentA.name} data-ai-hint="profile avatar" />
                             <AvatarFallback>{battle.opponentA.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                           </Avatar>

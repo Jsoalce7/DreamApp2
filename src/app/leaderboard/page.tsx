@@ -1,26 +1,35 @@
 
+"use client"; // Required for useUserProfilePopup hook
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { User } from "@/types";
 import { Gem, Trophy } from "lucide-react";
+import { useUserProfilePopup } from '@/contexts/UserProfilePopupContext';
 
 // Mock data for leaderboard users
 const mockLeaderboardUsers: User[] = [
-  { id: "user1", name: "DiamondKing", avatarUrl: "https://placehold.co/40x40.png?text=DK", diamonds: 1500 },
-  { id: "user2", name: "GemQueen", avatarUrl: "https://placehold.co/40x40.png?text=GQ", diamonds: 1350 },
-  { id: "user3", name: "SparkleLord", avatarUrl: "https://placehold.co/40x40.png?text=SL", diamonds: 1200 },
-  { id: "user4", name: "CrystalClear", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 1050 },
-  { id: "user5", name: "ShineBright", avatarUrl: "https://placehold.co/40x40.png?text=SB", diamonds: 900 },
-  { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 },
-  { id: "user6", name: "RockSolid", avatarUrl: "https://placehold.co/40x40.png?text=RS", diamonds: 600 },
-  { id: "user7", name: "GlimmerKid", avatarUrl: "https://placehold.co/40x40.png?text=GK", diamonds: 450 },
-  { id: "user8", name: "JewelMaster", avatarUrl: "https://placehold.co/40x40.png?text=JM", diamonds: 300 },
-  { id: "user9", name: "CoinCollector", avatarUrl: "https://placehold.co/40x40.png?text=CO", diamonds: 150 },
+  { id: "user1", name: "DiamondKing", avatarUrl: "https://placehold.co/40x40.png?text=DK", diamonds: 1500, battleStyle: "High Stakes" },
+  { id: "user2", name: "GemQueen", avatarUrl: "https://placehold.co/40x40.png?text=GQ", diamonds: 1350, battleStyle: "Strategic Plays" },
+  { id: "user3", name: "SparkleLord", avatarUrl: "https://placehold.co/40x40.png?text=SL", diamonds: 1200, battleStyle: "Creative Builds" },
+  { id: "user4", name: "CrystalClear", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 1050, battleStyle: "Puzzle Solving" },
+  { id: "user5", name: "ShineBright", avatarUrl: "https://placehold.co/40x40.png?text=SB", diamonds: 900, battleStyle: "Speedruns" },
+  { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750, battleStyle: "Comedy Roasts" },
+  { id: "user6", name: "RockSolid", avatarUrl: "https://placehold.co/40x40.png?text=RS", diamonds: 600, battleStyle: "Defense Master" },
+  { id: "user7", name: "GlimmerKid", avatarUrl: "https://placehold.co/40x40.png?text=GK", diamonds: 450, battleStyle: "Art Battles" },
+  { id: "user8", name: "JewelMaster", avatarUrl: "https://placehold.co/40x40.png?text=JM", diamonds: 300, battleStyle: "Trivia Expert" },
+  { id: "user9", name: "CoinCollector", avatarUrl: "https://placehold.co/40x40.png?text=CO", diamonds: 150, battleStyle: "Retro Gaming" },
 ];
 
 export default function LeaderboardPage() {
+  const { openPopup } = useUserProfilePopup();
   const sortedUsers = [...mockLeaderboardUsers].sort((a, b) => (b.diamonds || 0) - (a.diamonds || 0));
+
+  const handleUserClick = (user: User) => {
+    // The openPopup function in the context already checks for 'currentUser'
+    openPopup(user);
+  };
 
   return (
     <div className="space-y-8 py-8">
@@ -59,7 +68,13 @@ export default function LeaderboardPage() {
                        index + 1}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-3">
+                      <div 
+                        className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleUserClick(user)}
+                        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleUserClick(user)}
+                        role="button"
+                        tabIndex={0}
+                      >
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="profile avatar" />
                           <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>

@@ -13,13 +13,14 @@ import { Send, MessageSquare, Search, ArrowLeft } from "lucide-react";
 import { format, parseISO } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from "@/lib/utils";
+import { useUserProfilePopup } from '@/contexts/UserProfilePopupContext';
 
-const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 };
+const mockCurrentUser: User = { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750, battleStyle: "Comedy Roasts"};
 
 const mockUsers: User[] = [
-  { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120 },
-  { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP", diamonds: 250 },
-  { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50 },
+  { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120, battleStyle: "Comedy Roasts" },
+  { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP", diamonds: 250, battleStyle: "Speedruns" },
+  { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50, battleStyle: "Art Streams" },
 ];
 
 const mockThreads: DirectMessageThread[] = [
@@ -54,9 +55,10 @@ interface ChatMessagesProps {
   messages: Message[];
   currentUserId: string;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  openProfilePopup: (user: User) => void;
 }
 
-function ChatMessages({ messages, currentUserId, messagesEndRef }: ChatMessagesProps) {
+function ChatMessages({ messages, currentUserId, messagesEndRef, openProfilePopup }: ChatMessagesProps) {
   return (
     <>
       {messages.map(msg => (
@@ -65,7 +67,13 @@ function ChatMessages({ messages, currentUserId, messagesEndRef }: ChatMessagesP
           className={`flex ${msg.sender.id === currentUserId ? "justify-end" : "justify-start"}`}
         >
           <div className={`flex items-end gap-2 max-w-[70%] ${msg.sender.id === currentUserId ? "flex-row-reverse" : "flex-row"}`}>
-            <Avatar className="h-8 w-8">
+            <Avatar 
+              className="h-8 w-8 cursor-pointer"
+              onClick={() => openProfilePopup(msg.sender)}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(msg.sender)}
+              role="button"
+              tabIndex={0}
+            >
                 <AvatarImage src={msg.sender.avatarUrl} alt={msg.sender.name} data-ai-hint="profile avatar"/>
                 <AvatarFallback>{msg.sender.name.substring(0,1)}</AvatarFallback>
             </Avatar>
@@ -89,7 +97,6 @@ function ChatMessages({ messages, currentUserId, messagesEndRef }: ChatMessagesP
   );
 }
 
-
 interface MobileChatWindowLayoutProps {
   activeMobileView: MobileChatView;
   activeThread: DirectMessageThread | undefined;
@@ -102,6 +109,7 @@ interface MobileChatWindowLayoutProps {
   handleBackToList: () => void;
   getOtherParticipant: (thread: DirectMessageThread) => User | undefined;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  openProfilePopup: (user: User) => void;
 }
 
 function MobileChatWindowLayout({
@@ -115,7 +123,8 @@ function MobileChatWindowLayout({
   handleThreadSelect,
   handleBackToList,
   getOtherParticipant,
-  messagesEndRef
+  messagesEndRef,
+  openProfilePopup,
 }: MobileChatWindowLayoutProps) {
   
   useEffect(() => {
@@ -142,12 +151,24 @@ function MobileChatWindowLayout({
                 className="w-full justify-start p-4 h-auto rounded-none border-b"
                 onClick={() => handleThreadSelect(thread.id)}
               >
-                <Avatar className="h-10 w-10 mr-3">
+                <Avatar 
+                  className="h-10 w-10 mr-3 cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); openProfilePopup(otherUser); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openProfilePopup(otherUser); }}}
+                  role="button"
+                  tabIndex={0}
+                >
                   <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="profile avatar"/>
                   <AvatarFallback>{otherUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow text-left">
-                  <p className="font-semibold">{otherUser.name}</p>
+                  <p 
+                    className="font-semibold cursor-pointer hover:underline"
+                    onClick={(e) => { e.stopPropagation(); openProfilePopup(otherUser); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openProfilePopup(otherUser); }}}
+                    role="button"
+                    tabIndex={0}
+                  >{otherUser.name}</p>
                   <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[200px]">
                     {thread.lastMessage?.text || "No messages yet"}
                   </p>
@@ -165,7 +186,6 @@ function MobileChatWindowLayout({
     );
   }
 
-  // activeMobileView === 'chat'
   if (!activeThread || !otherParticipant) {
     return (
       <div className="flex flex-col w-full h-full items-center justify-center text-muted-foreground p-4 bg-background">
@@ -182,15 +202,27 @@ function MobileChatWindowLayout({
         <Button variant="ghost" size="icon" className="mr-2 shrink-0" onClick={handleBackToList}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <Avatar className="h-8 w-8 mr-3 shrink-0">
+        <Avatar 
+            className="h-8 w-8 mr-3 shrink-0 cursor-pointer"
+            onClick={() => openProfilePopup(otherParticipant)}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(otherParticipant)}
+            role="button"
+            tabIndex={0}
+        >
           <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
           <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
-        <h2 className="text-lg font-semibold truncate flex-grow">{otherParticipant?.name || "Chat"}</h2>
+        <h2 
+            className="text-lg font-semibold truncate flex-grow cursor-pointer hover:underline"
+            onClick={() => openProfilePopup(otherParticipant)}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(otherParticipant)}
+            role="button"
+            tabIndex={0}
+        >{otherParticipant?.name || "Chat"}</h2>
       </div>
 
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
-         <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} />
+         <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} openProfilePopup={openProfilePopup} />
       </div>
 
       <div className="p-4 border-t bg-card shrink-0">
@@ -212,7 +244,6 @@ function MobileChatWindowLayout({
   );
 }
 
-
 interface DesktopChatWindowLayoutProps {
   activeThreadId: string | null;
   activeThread: DirectMessageThread | undefined;
@@ -224,6 +255,7 @@ interface DesktopChatWindowLayoutProps {
   handleThreadSelect: (threadId: string) => void;
   getOtherParticipant: (thread: DirectMessageThread) => User | undefined;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  openProfilePopup: (user: User) => void;
 }
 
 function DesktopChatWindowLayout({
@@ -236,7 +268,8 @@ function DesktopChatWindowLayout({
   handleSendMessage,
   handleThreadSelect,
   getOtherParticipant,
-  messagesEndRef
+  messagesEndRef,
+  openProfilePopup,
 }: DesktopChatWindowLayoutProps) {
 
   useEffect(() => {
@@ -263,12 +296,24 @@ function DesktopChatWindowLayout({
                 className="w-full justify-start p-4 h-auto rounded-none border-b"
                 onClick={() => handleThreadSelect(thread.id)}
               >
-                <Avatar className="h-10 w-10 mr-3">
+                <Avatar 
+                  className="h-10 w-10 mr-3 cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); openProfilePopup(otherUser); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openProfilePopup(otherUser); }}}
+                  role="button"
+                  tabIndex={0}
+                >
                   <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="profile avatar"/>
                   <AvatarFallback>{otherUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow text-left">
-                  <p className="font-semibold">{otherUser.name}</p>
+                  <p 
+                    className="font-semibold cursor-pointer hover:underline"
+                    onClick={(e) => { e.stopPropagation(); openProfilePopup(otherUser); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openProfilePopup(otherUser); }}}
+                    role="button"
+                    tabIndex={0}
+                  >{otherUser.name}</p>
                   <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[200px]">
                     {thread.lastMessage?.text || "No messages yet"}
                   </p>
@@ -293,17 +338,29 @@ function DesktopChatWindowLayout({
         ) : (
           <>
             <CardHeader className="p-4 border-b bg-card flex-row items-center shrink-0">
-              <Avatar className="h-8 w-8 mr-2 shrink-0">
+              <Avatar 
+                className="h-8 w-8 mr-2 shrink-0 cursor-pointer"
+                onClick={() => openProfilePopup(otherParticipant)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(otherParticipant)}
+                role="button"
+                tabIndex={0}
+              >
                 <AvatarImage src={otherParticipant?.avatarUrl} alt={otherParticipant?.name} data-ai-hint="profile avatar"/>
                 <AvatarFallback>{otherParticipant?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
-              <CardTitle className="text-lg truncate">
+              <CardTitle 
+                className="text-lg truncate cursor-pointer hover:underline"
+                onClick={() => openProfilePopup(otherParticipant)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openProfilePopup(otherParticipant)}
+                role="button"
+                tabIndex={0}
+              >
                 {otherParticipant?.name || "Chat"}
               </CardTitle>
             </CardHeader>
             
             <div className="flex-grow h-0 overflow-y-auto p-4 space-y-4">
-              <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} />
+              <ChatMessages messages={activeThread.messages} currentUserId={mockCurrentUser.id} messagesEndRef={messagesEndRef} openProfilePopup={openProfilePopup}/>
             </div>
 
             <CardFooter className="p-4 border-t bg-card shrink-0">
@@ -328,7 +385,6 @@ function DesktopChatWindowLayout({
   );
 }
 
-
 export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [threads, setThreads] = useState<DirectMessageThread[]>(mockThreads);
@@ -336,6 +392,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const [activeMobileView, setActiveMobileView] = useState<MobileChatView>('list');
+  const { openPopup } = useUserProfilePopup();
 
   const getOtherParticipant = (thread: DirectMessageThread): User | undefined => {
     return thread.participants.find(p => p.id !== mockCurrentUser.id);
@@ -391,7 +448,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
   const handleBackToList = () => {
     setActiveThreadId(null); 
     if (isMobile) {
-      setActiveMobileView('list'); // Explicitly set view for mobile
+      setActiveMobileView('list'); 
       onMobileViewChange?.('list');
     }
   };
@@ -415,6 +472,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
           handleBackToList={handleBackToList}
           getOtherParticipant={getOtherParticipant}
           messagesEndRef={messagesEndRef}
+          openProfilePopup={openPopup}
         />
       </div>
     );
@@ -432,6 +490,7 @@ export function ChatWindow({ onMobileViewChange }: ChatWindowProps) {
       handleThreadSelect={handleThreadSelect}
       getOtherParticipant={getOtherParticipant}
       messagesEndRef={messagesEndRef}
+      openProfilePopup={openPopup}
     />
   );
 }
