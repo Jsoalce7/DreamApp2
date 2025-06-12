@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit3, Mail, Phone, UserCircle2, Gem } from "lucide-react"; // Added Gem
+import { Edit3, Mail, Phone, UserCircle2, Gem } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -18,7 +18,7 @@ export default function ProfilePage() {
     bio: "Livestream battle enthusiast. Ready to take on any challenge!",
     battlesWon: 42,
     battlesLost: 10,
-    diamonds: 750, // Added diamonds
+    diamonds: 750,
   };
 
   return (
@@ -36,6 +36,25 @@ export default function ProfilePage() {
             <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="profile avatar large"/>
             <AvatarFallback className="text-3xl sm:text-4xl">{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
+
+          <div className="grid grid-cols-3 gap-4 text-center my-4 w-full max-w-xs">
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-green-500">{user.battlesWon}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Battles Won</p>
+            </div>
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-red-500">{user.battlesLost}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Battles Lost</p>
+            </div>
+            <div>
+              <div className="flex items-center justify-center">
+                <Gem className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-1" />
+                <p className="text-xl sm:text-2xl font-bold text-blue-500">{(user.diamonds || 0).toLocaleString()}</p>
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Diamonds</p>
+            </div>
+          </div>
+
           <CardTitle className="text-2xl sm:text-3xl font-headline">{user.name}</CardTitle>
           {user.tiktokId && <CardDescription className="text-accent">@{user.tiktokId} on TikTok</CardDescription>}
           <p className="text-muted-foreground mt-2 max-w-md">{user.bio}</p>
@@ -75,24 +94,6 @@ export default function ProfilePage() {
           <div>
             <Label htmlFor="bio">Bio</Label>
             <Textarea id="bio" defaultValue={user.bio} placeholder="Tell us about yourself..." className="min-h-[100px]" />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 text-center pt-4 border-t">
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-green-500">{user.battlesWon}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Battles Won</p>
-            </div>
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-red-500">{user.battlesLost}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Battles Lost</p>
-            </div>
-            <div>
-              <div className="flex items-center justify-center">
-                <Gem className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-1" />
-                <p className="text-xl sm:text-2xl font-bold text-blue-500">{(user.diamonds || 0).toLocaleString()}</p>
-              </div>
-              <p className="text-xs sm:text-sm text-muted-foreground">Diamonds</p>
-            </div>
           </div>
 
           <Button className="w-full bg-primary hover:bg-primary/90">
