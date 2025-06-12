@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit3, Mail, Phone, UserCircle2, Gem } from "lucide-react";
+import { Edit3, Mail, Phone, UserCircle2, Gem, Sparkles } from "lucide-react"; // Added Sparkles
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -19,6 +19,7 @@ export default function ProfilePage() {
     battlesWon: 42,
     battlesLost: 10,
     diamonds: 750,
+    battleStyle: "Comedy Roasts", // Added placeholder battle style
   };
 
   return (
@@ -87,6 +88,13 @@ export default function ProfilePage() {
               <div className="relative flex items-center">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
                 <Input id="phone" type="tel" placeholder="Your phone number" className="pl-10" />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="battleStyle">Battle Style</Label>
+              <div className="relative flex items-center">
+                <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                <Input id="battleStyle" defaultValue={user.battleStyle || ""} placeholder="e.g., Cosplay, Singing, Comedy" className="pl-10" />
               </div>
             </div>
           </div>
