@@ -5,4 +5,6 @@ export interface User {
   avatarUrl?: string;
   tiktokId?: string; // Optional, if signing in via TikTok
   diamonds?: number; // Added for leaderboard
+  battleStyle?: string; // Added for profile and popup
 }
+

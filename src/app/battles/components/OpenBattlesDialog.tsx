@@ -32,17 +32,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Clock3, Swords, Users2, Sparkles, ListChecks, CheckCircle, AlertTriangle, Search, ListFilter } from "lucide-react";
+import { UserProfilePopup } from "@/components/shared/UserProfilePopup";
 
-// Mock current user - in a real app, this would come from auth context
 const currentUserId = "currentUser";
-const mockCurrentUser: User = { id: "currentUser", name: "MeTheChallenger", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 };
+const mockCurrentUser: User = { id: "currentUser", name: "MeTheChallenger", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750, battleStyle: "Live Coding" };
 
 
-// Mock data for open battles - in a real app, this would be fetched from Firestore
 const initialMockOpenBattles: Battle[] = [
   {
     id: "open1",
-    opponentA: { id: "user1", name: "ValiantVictor", avatarUrl: "https://placehold.co/40x40.png?text=VV", diamonds: 120 },
+    opponentA: { id: "user1", name: "ValiantVictor", avatarUrl: "https://placehold.co/40x40.png?text=VV", diamonds: 120, battleStyle: "Retro Gaming" },
     dateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Pending", 
@@ -51,7 +50,7 @@ const initialMockOpenBattles: Battle[] = [
   },
   {
     id: "open2",
-    opponentA: { id: "user3", name: "CaptainCreative", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50 },
+    opponentA: { id: "user3", name: "CaptainCreative", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50, battleStyle: "Music Production" },
     dateTime: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "Team Clash",
     status: "Pending",
@@ -60,7 +59,7 @@ const initialMockOpenBattles: Battle[] = [
   },
   {
     id: "open3",
-    opponentA: { id: "user5", name: "FunkyFred", avatarUrl: "https://placehold.co/40x40.png?text=FF", diamonds: 500 },
+    opponentA: { id: "user5", name: "FunkyFred", avatarUrl: "https://placehold.co/40x40.png?text=FF", diamonds: 500, battleStyle: "Dance Battles" },
     dateTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "Fun Mode",
     status: "Pending",
@@ -69,7 +68,7 @@ const initialMockOpenBattles: Battle[] = [
   },
   {
     id: "open4",
-    opponentA: { id: "user1", name: "ValiantVictor", avatarUrl: "https://placehold.co/40x40.png?text=VV", diamonds: 120 },
+    opponentA: { id: "user1", name: "ValiantVictor", avatarUrl: "https://placehold.co/40x40.png?text=VV", diamonds: 120, battleStyle: "Retro Gaming" },
     dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "Team Clash",
     status: "Pending", 
@@ -78,7 +77,7 @@ const initialMockOpenBattles: Battle[] = [
   },
   {
     id: "open5",
-    opponentA: { id: "user5", name: "FunkyFred", avatarUrl: "https://placehold.co/40x40.png?text=FF", diamonds: 500 },
+    opponentA: { id: "user5", name: "FunkyFred", avatarUrl: "https://placehold.co/40x40.png?text=FF", diamonds: 500, battleStyle: "Dance Battles" },
     dateTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Pending",
@@ -183,7 +182,7 @@ export function OpenBattlesDialog() {
 
           <ScrollArea className="flex-grow">
             {filteredOpenBattles.length > 0 ? (
-              <div className="space-y-4 py-4 pr-3"> {/* Added pr-3 to prevent content from going under a potential scrollbar */}
+              <div className="space-y-4 py-4 pr-3">
                 {filteredOpenBattles.map((battle) => (
                   <Card key={battle.id} className="shadow-md hover:shadow-lg transition-shadow">
                     <CardHeader>
@@ -195,7 +194,14 @@ export function OpenBattlesDialog() {
                           </CardTitle>
                           <BattleCardDescription>
                             Challenger: 
-                            <span className="font-medium ml-1">{battle.opponentA.name}</span>
+                            <UserProfilePopup
+                              user={battle.opponentA}
+                              trigger={
+                                <span className="font-medium ml-1 cursor-pointer hover:underline">
+                                  {battle.opponentA.name}
+                                </span>
+                              }
+                            />
                           </BattleCardDescription>
                         </div>
                          <Avatar className="h-10 w-10">
@@ -235,7 +241,7 @@ export function OpenBattlesDialog() {
               </div>
             )}
           </ScrollArea>
-          <DialogFooter className="mt-4 sm:justify-end pt-4 border-t"> {/* Added pt-4 and border-t for separation */}
+          <DialogFooter className="mt-4 sm:justify-end pt-4 border-t">
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 Close
@@ -272,4 +278,3 @@ export function OpenBattlesDialog() {
     </>
   );
 }
-

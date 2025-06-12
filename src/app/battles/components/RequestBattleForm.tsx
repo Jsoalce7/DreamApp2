@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react"; // Added useEffect here
+import { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,11 +17,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { OpenBattlesDialog } from "./OpenBattlesDialog"; // Import the new dialog
+import { OpenBattlesDialog } from "./OpenBattlesDialog";
+import { useSearchParams } from 'next/navigation'; // For reading query params
 
 const battleRequestSchema = z.object({
   battleType: z.enum(["direct", "open"], { required_error: "Please select a battle type."}),
-  opponentName: z.string().optional(),
+  opponentName: z.string().optional(), // Made optional at schema level
+  opponentId: z.string().optional(), // To store ID from query param
   dateTime: z.date({ required_error: "Please select a date and time." }),
   mode: z.enum(["1v1 Duel", "Team Clash", "Fun Mode"], { required_error: "Please select a battle mode." }),
 }).refine(data => {
@@ -36,36 +38,59 @@ const battleRequestSchema = z.object({
 
 type BattleRequestFormData = z.infer<typeof battleRequestSchema>;
 
-// Mock user data for opponent selection
 const mockOpponents = [
-  { id: "user1", name: "StreamerX", diamonds: 120 },
-  { id: "user2", name: "GamerPro", diamonds: 250 },
-  { id: "user3", name: "CreativeCat", diamonds: 50 },
-  { id: "user4", name: "ArtisticAnt", diamonds: 300 },
-  { id: "currentUser", name: "You", diamonds: 750 }, // Ensure current user isn't listed as opponent for direct
+  { id: "user1", name: "StreamerX", diamonds: 120, battleStyle: "Comedy Roasts" },
+  { id: "user2", name: "GamerPro", diamonds: 250, battleStyle: "Speedruns" },
+  { id: "user3", name: "CreativeCat", diamonds: 50, battleStyle: "Art Streams" },
+  { id: "user4", name: "ArtisticAnt", diamonds: 300, battleStyle: "DIY Crafts" },
 ].filter(op => op.id !== "currentUser");
 
 
 export function RequestBattleForm() {
   const { toast } = useToast();
-  const [selectedBattleType, setSelectedBattleType] = useState<"direct" | "open" | undefined>(undefined);
+  const searchParams = useSearchParams();
+  const [selectedBattleType, setSelectedBattleType] = useState<"direct" | "open" | undefined>("direct");
 
-  const { register, handleSubmit, control, setValue, watch, formState: { errors, isSubmitting } } = useForm<BattleRequestFormData>({
+  const { register, handleSubmit, control, setValue, watch, formState: { errors, isSubmitting }, reset } = useForm<BattleRequestFormData>({
     resolver: zodResolver(battleRequestSchema),
     defaultValues: {
-      battleType: "direct", // Default to direct
+      battleType: "direct",
+      opponentName: "",
+      opponentId: "",
     }
   });
 
-  // Watch the battleType field to react to its changes
   const battleType = watch("battleType");
 
-  useEffect(() => { // Changed from React.useEffect to useEffect
+  useEffect(() => {
     setSelectedBattleType(battleType);
     if (battleType === "open") {
-      setValue("opponentName", undefined); // Clear opponent name if switching to open
+      setValue("opponentName", undefined);
+      setValue("opponentId", undefined);
     }
   }, [battleType, setValue]);
+
+  useEffect(() => {
+    const queryOpponentId = searchParams.get("opponentId");
+    const queryOpponentName = searchParams.get("opponentName");
+    if (queryOpponentId && queryOpponentName) {
+      setValue("battleType", "direct");
+      setValue("opponentName", queryOpponentName);
+      setValue("opponentId", queryOpponentId); 
+      // Ensure opponent is in the list or add them if necessary for display
+      // For this mock, we assume they'd be in mockOpponents if valid.
+      // In a real app, you might fetch opponent details or validate.
+      const selectedOpponent = mockOpponents.find(op => op.id === queryOpponentId || op.name === queryOpponentName);
+      if (selectedOpponent) {
+         setValue("opponentName", selectedOpponent.name); // Use name from mockOpponents for consistency
+      } else if (queryOpponentName) {
+        // If not in list, still prefill the name. Select will not show a value if not in options.
+        // This is a limitation of using Select with dynamic prefill outside its options.
+        // A custom searchable select or an input field might be better for arbitrary opponent names.
+         setValue("opponentName", queryOpponentName);
+      }
+    }
+  }, [searchParams, setValue, reset]);
 
 
   const onSubmit: SubmitHandler<BattleRequestFormData> = async (data) => {
@@ -74,15 +99,10 @@ export function RequestBattleForm() {
     let toastDescription = "";
     if (data.battleType === 'direct') {
       toastDescription = `Your direct challenge to ${data.opponentName} for a ${data.mode} on ${format(data.dateTime, "PPpp")} has been sent.`;
-      // TODO: Add to a list that BattleRequestInbox can see if requestedToUserId matches.
-      // For now, this will behave as before for direct requests.
       console.log("Direct Battle Request Data:", data);
-    } else { // Open Battle
+    } else { 
       toastDescription = `Your open challenge for a ${data.mode} on ${format(data.dateTime, "PPpp")} has been created.`;
-      // TODO: Add this to a global list of open battles.
-      // For demonstration, we'll just log it.
       console.log("Open Battle Request Data:", data, " (Created by: currentUser)");
-      // In a real app, this would be saved to Firestore with battleType: "open", status: "pending", opponentA: currentUser
     }
 
     toast({
@@ -90,7 +110,7 @@ export function RequestBattleForm() {
       description: toastDescription,
       variant: "default",
     });
-    // Reset form or redirect user
+    reset({battleType: data.battleType}); // Reset form but keep battle type
   };
 
   return (
@@ -107,7 +127,7 @@ export function RequestBattleForm() {
           <div>
             <Label htmlFor="battleType" className="font-medium">Battle Type</Label>
             <Select
-              defaultValue="direct"
+              value={battleType} // Controlled component
               onValueChange={(value: "direct" | "open") => setValue("battleType", value, { shouldValidate: true })}
             >
               <SelectTrigger id="battleType">
@@ -125,8 +145,12 @@ export function RequestBattleForm() {
             <div>
               <Label htmlFor="opponentName" className="font-medium">Opponent Name</Label>
               <Select 
-                onValueChange={(value) => setValue("opponentName", value, { shouldValidate: true })}
-                value={control._formValues.opponentName}
+                onValueChange={(value) => {
+                  const selectedOpp = mockOpponents.find(op => op.name === value);
+                  setValue("opponentName", value, { shouldValidate: true });
+                  setValue("opponentId", selectedOpp?.id || undefined);
+                }}
+                value={control._formValues.opponentName || ""}
               >
                 <SelectTrigger id="opponentName">
                   <SelectValue placeholder="Select an opponent" />
@@ -162,7 +186,7 @@ export function RequestBattleForm() {
                   selected={control._formValues.dateTime}
                   onSelect={(date) => setValue("dateTime", date as Date, { shouldValidate: true })}
                   initialFocus
-                  disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))} // Disable past dates
+                  disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))} 
                 />
                 <div className="p-3 border-t border-border">
                   <Label htmlFor="time" className="text-sm">Time (HH:mm)</Label>
@@ -174,7 +198,6 @@ export function RequestBattleForm() {
                       const time = e.target.value;
                       const [hours, minutes] = time.split(':').map(Number);
                       const currentSelectedDate = control._formValues.dateTime || new Date();
-                      // Ensure date part is not altered, only time
                       const newDateTime = new Date(currentSelectedDate.getFullYear(), currentSelectedDate.getMonth(), currentSelectedDate.getDate(), hours, minutes);
                       setValue("dateTime", newDateTime, { shouldValidate: true });
                     }}
@@ -211,4 +234,3 @@ export function RequestBattleForm() {
     </Card>
   );
 }
-

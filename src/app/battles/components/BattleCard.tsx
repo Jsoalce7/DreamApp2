@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock3, CheckCircle2, XCircle, Archive, Swords, Users2, Sparkles, MailQuestion } from "lucide-react";
 import { format, parseISO } from 'date-fns';
+import { UserProfilePopup } from "@/components/shared/UserProfilePopup"; // Added import
 
 interface BattleCardProps {
   battle: Battle;
@@ -36,7 +37,7 @@ const getModeIcon = (mode: Battle["mode"]) => {
 };
 
 const UserDisplay = ({ user }: { user?: User }) => {
-  if (!user) { // Handle case where opponentB might be undefined for open battles not yet rendered in this card
+  if (!user) { 
     return (
       <div className="flex items-center space-x-2">
         <Avatar className="h-8 w-8">
@@ -46,8 +47,8 @@ const UserDisplay = ({ user }: { user?: User }) => {
       </div>
     );
   }
-  return (
-    <div className="flex items-center space-x-2">
+  const triggerContent = (
+    <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity">
       <Avatar className="h-8 w-8">
         <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="profile avatar" />
         <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
@@ -55,6 +56,13 @@ const UserDisplay = ({ user }: { user?: User }) => {
       <span className="font-medium text-left">{user.name}</span>
     </div>
   );
+
+  // Do not show popup for the current user's own display
+  if (user.id === "currentUser" || user.name === "You" || user.name?.includes("(You)")) {
+    return triggerContent;
+  }
+
+  return <UserProfilePopup user={user} trigger={triggerContent} />;
 };
 
 export function BattleCard({ battle, currentUserId, onStatusUpdate }: BattleCardProps) {
@@ -90,7 +98,7 @@ export function BattleCard({ battle, currentUserId, onStatusUpdate }: BattleCard
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 flex-grow">
-        <div className="flex flex-col items-center space-y-2"> {/* Container for OpponentA, VS, OpponentB remains centered vertically */}
+        <div className="flex flex-col items-center space-y-2"> 
           <UserDisplay user={battle.opponentA} />
           <span className="text-muted-foreground font-bold">VS</span>
           <UserDisplay user={battle.opponentB} />

@@ -14,53 +14,53 @@ const currentUserId = "currentUser";
 
 const initialMockBattles: Battle[] = [
   {
-    id: "1", // Not involving currentUser
-    opponentA: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120 },
-    opponentB: { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP", diamonds: 250 },
+    id: "1", 
+    opponentA: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120, battleStyle: "Comedy Roasts" },
+    opponentB: { id: "user2", name: "GamerPro", avatarUrl: "https://placehold.co/40x40.png?text=GP", diamonds: 250, battleStyle: "Speedruns" },
     dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), 
     mode: "1v1 Duel",
     status: "Confirmed",
   },
-  { // New confirmed battle for the current user
+  { 
     id: "confirmedUserBattle01",
-    opponentA: { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750 },
-    opponentB: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120 },
+    opponentA: { id: "currentUser", name: "You", avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750, battleStyle: "Strategy Games" },
+    opponentB: { id: "user1", name: "StreamerX", avatarUrl: "https://placehold.co/40x40.png?text=SX", diamonds: 120, battleStyle: "Comedy Roasts" },
     dateTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Confirmed",
   },
   {
-    id: "2", // Pending, involving currentUser
-    opponentA: { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50 },
-    opponentB: { id: "currentUser", name: "ArtisticAnt (You)", avatarUrl: "https://placehold.co/40x40.png?text=AA", diamonds: 300 },
+    id: "2", 
+    opponentA: { id: "user3", name: "CreativeCat", avatarUrl: "https://placehold.co/40x40.png?text=CC", diamonds: 50, battleStyle: "Art Streams" },
+    opponentB: { id: "currentUser", name: "ArtisticAnt (You)", avatarUrl: "https://placehold.co/40x40.png?text=AA", diamonds: 300, battleStyle: "DIY Crafts" },
     dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), 
     mode: "Team Clash",
-    status: "Pending", // Will be filtered out from "Upcoming Battles" initial list
+    status: "Pending", 
     requestedToUserId: "currentUser", 
   },
   {
     id: "3",
-    opponentA: { id: "user5", name: "SpeedRunner", avatarUrl: "https://placehold.co/40x40.png?text=SR", diamonds: 500 },
-    opponentB: { id: "user6", name: "ChillVibes", avatarUrl: "https://placehold.co/40x40.png?text=CV", diamonds: 80 },
+    opponentA: { id: "user5", name: "SpeedRunner", avatarUrl: "https://placehold.co/40x40.png?text=SR", diamonds: 500, battleStyle: "Platformers" },
+    opponentB: { id: "user6", name: "ChillVibes", avatarUrl: "https://placehold.co/40x40.png?text=CV", diamonds: 80, battleStyle: "Lo-fi Beats" },
     dateTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), 
     mode: "Fun Mode",
     status: "Completed",
   },
   {
     id: "4",
-    opponentA: { id: "user1", name: "StreamerX", diamonds: 120 },
-    opponentB: { id: "user5", name: "SpeedRunner", diamonds: 500 },
+    opponentA: { id: "user1", name: "StreamerX", diamonds: 120, battleStyle: "Comedy Roasts" },
+    opponentB: { id: "user5", name: "SpeedRunner", diamonds: 500, battleStyle: "Platformers" },
     dateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
     status: "Declined",
   },
   {
-    id: "5", // Requested by currentUser
-    opponentA: { id: "currentUser", name: "You" , avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750}, 
-    opponentB: { id: "user7", name: "ProPlayer7", avatarUrl: "https://placehold.co/40x40.png?text=P7", diamonds: 1000 },
+    id: "5", 
+    opponentA: { id: "currentUser", name: "You" , avatarUrl: "https://placehold.co/40x40.png?text=ME", diamonds: 750, battleStyle: "Strategy Games"}, 
+    opponentB: { id: "user7", name: "ProPlayer7", avatarUrl: "https://placehold.co/40x40.png?text=P7", diamonds: 1000, battleStyle: "FPS Pro" },
     dateTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
     mode: "1v1 Duel",
-    status: "Requested", // Will be filtered out
+    status: "Requested", 
     requestedByUserId: "currentUser",
     requestedToUserId: "user7",
   },
@@ -70,34 +70,29 @@ const initialMockBattles: Battle[] = [
 export function BattleList() {
   const [battles, setBattles] = useState<Battle[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all"); // "all" or specific status
+  const [filterStatus, setFilterStatus] = useState<string>("all"); 
   const [filterMode, setFilterMode] = useState<string>("all");
 
   useEffect(() => {
-    // For "Upcoming Battles" tab, only show confirmed battles involving the current user
     const userConfirmedBattles = initialMockBattles.filter(
       (battle) =>
         battle.status === "Confirmed" &&
-        (battle.opponentA.id === currentUserId || battle.opponentB.id === currentUserId)
+        (battle.opponentA.id === currentUserId || battle.opponentB?.id === currentUserId)
     );
     setBattles(userConfirmedBattles);
   }, []);
 
   const handleStatusUpdate = (battleId: string, newStatus: Battle["status"]) => {
-    // This update logic might need to be smarter if it affects the "Upcoming Battles" list
-    // e.g. if a battle is no longer "Confirmed" or no longer involves the user.
-    // For now, it just updates status locally.
     setBattles(prevBattles => 
       prevBattles.map(b => b.id === battleId ? { ...b, status: newStatus } : b)
     );
-    // TODO: Update in Firebase
     console.log(`Battle ${battleId} status updated to ${newStatus}`);
   };
 
   const filteredBattles = battles
     .filter(battle => 
       (battle.opponentA.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       battle.opponentB.name.toLowerCase().includes(searchTerm.toLowerCase()))
+       battle.opponentB?.name.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .filter(battle => filterStatus === "all" || battle.status === filterStatus)
     .filter(battle => filterMode === "all" || battle.mode === filterMode);
@@ -121,7 +116,6 @@ export function BattleList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            {/* Since data is pre-filtered to "Confirmed", other options might not show results */}
             <SelectItem value="Confirmed">Confirmed</SelectItem>
             <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
