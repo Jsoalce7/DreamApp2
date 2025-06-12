@@ -239,7 +239,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow h-0">
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-4"> {/* Padding applied to inner content */}
             {activeChannel!.messages.map(msg => (
               <div
                 key={msg.id}
@@ -308,7 +308,7 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
 
   if (isMobile) {
     return (
-       <div className="w-full fixed inset-0 top-[56px] flex flex-col bg-background">
+       <div className="w-full h-full flex flex-col bg-background">
         {activeMobileView === 'list' && <ChannelListView />}
         {activeMobileView === 'chat' && activeChannelId && <ChannelChatView />}
          {activeMobileView === 'chat' && !activeChannelId && ( 
@@ -323,9 +323,10 @@ export function CommunityChat({ onMobileViewChange }: CommunityChatProps) {
   }
 
   return (
-    <Card className="h-[calc(100vh-10rem)] md:h-[70vh] flex flex-row shadow-xl">
+    <Card className="h-full flex flex-row shadow-xl">
       <ChannelListView />
       <ChannelChatView />
     </Card>
   );
 }
+
