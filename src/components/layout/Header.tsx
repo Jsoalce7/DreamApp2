@@ -17,24 +17,9 @@ export function Header() {
   return (
     <header className="bg-card border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <Logo />
-          <span className="font-headline font-semibold text-xl text-primary">ClashSync Lite</span>
-        </Link>
-
-        <nav className="hidden md:flex items-center space-x-2">
-          {navItems.map((item) => (
-            <Button key={item.href} variant="ghost" asChild>
-              <Link href={item.href}>{item.label}</Link>
-            </Button>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-4">
-           <Avatar>
-            <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="profile avatar" />
-            <AvatarFallback>CS</AvatarFallback>
-          </Avatar>
+        {/* Left Group: Hamburger (mobile) + Logo/Title */}
+        <div className="flex items-center gap-2">
+          {/* Hamburger Menu (Visible on mobile only) */}
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -43,7 +28,7 @@ export function Header() {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right">
+              <SheetContent side="left"> {/* Changed side to left */}
                 <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
                 <nav className="flex flex-col space-y-4 mt-8">
                   {navItems.map((item) => (
@@ -55,6 +40,28 @@ export function Header() {
               </SheetContent>
             </Sheet>
           </div>
+          {/* Logo and Title */}
+          <Link href="/" className="flex items-center gap-2">
+            <Logo />
+            <span className="font-headline font-semibold text-xl text-primary">ClashSync Lite</span>
+          </Link>
+        </div>
+
+        {/* Middle Group: Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-2">
+          {navItems.map((item) => (
+            <Button key={item.href} variant="ghost" asChild>
+              <Link href={item.href}>{item.label}</Link>
+            </Button>
+          ))}
+        </nav>
+
+        {/* Right Group: Avatar */}
+        <div className="flex items-center">
+           <Avatar>
+            <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="profile avatar" />
+            <AvatarFallback>CS</AvatarFallback>
+          </Avatar>
         </div>
       </div>
     </header>
