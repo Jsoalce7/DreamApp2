@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Battle, User } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -80,6 +80,12 @@ const getModeIcon = (mode: Battle["mode"]) => {
 export function CommunityBattleList() {
   const [battles] = useState<Battle[]>(mockCommunityBattles);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const battleDays = battles.map(battle => parseISO(battle.dateTime));
 
@@ -93,7 +99,7 @@ export function CommunityBattleList() {
     // today: "bg-accent/20 text-accent font-bold rounded-md",
   };
 
-  const battlesForSelectedDate = selectedDate
+  const battlesForSelectedDate = selectedDate && isClient
     ? battles.filter(battle => isSameDay(parseISO(battle.dateTime), selectedDate))
     : [];
 
@@ -110,20 +116,24 @@ export function CommunityBattleList() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col lg:flex-row lg:gap-8">
-          <div className="w-full lg:w-auto lg:max-w-md mx-auto flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              modifiers={modifiers}
-              modifiersClassNames={modifiersClassNames}
-              className="rounded-md border shadow-sm p-3 bg-card" 
-              initialFocus
-            />
+          <div className="w-full md:px-8 lg:px-0 lg:w-auto lg:max-w-md mx-auto">
+            {isClient ? (
+                <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                modifiers={modifiers}
+                modifiersClassNames={modifiersClassNames}
+                className="rounded-md border shadow-sm p-3 bg-card w-full" 
+                initialFocus
+                />
+            ) : (
+                <div className="rounded-md border shadow-sm p-3 bg-card w-full aspect-[4/3] animate-pulse"></div>
+            )}
           </div>
 
           <div className="mt-6 lg:mt-0 lg:flex-1 w-full">
-            {selectedDate ? (
+            {selectedDate && isClient ? (
               <div>
                 <h3 className="text-xl font-semibold mb-4 flex items-center border-b pb-2">
                   <CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" />
