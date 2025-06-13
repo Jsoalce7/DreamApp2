@@ -87,3 +87,4 @@ export default function BattlesPage() {
     </div>
   );
 }
+export const dynamic = "force-dynamic";
